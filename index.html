@@ -296,6 +296,87 @@
         
           <section id="main" style="float:none;">
   
+    <article id="post-depolymyblog"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2017/10/21/depolymyblog/">博客部署记录</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2017/10/21/depolymyblog/" class="article-date">
+	  <time datetime="2017-10-20T18:09:40.000Z" itemprop="datePublished">2017-10-21</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/日常折腾/">日常折腾</a>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>从学习到部署花了我一天时间，主要是看朋友的博客<a href="http://www.vinsongeek.com" target="_blank" rel="external">vinson</a>完成大部分的安装配置的。这篇文章主要讲讲部署途中遇到的各种坑和要点。  </p>
+<h3 id="坑-参考"><a href="#坑-参考" class="headerlink" title="坑/参考"></a>坑/参考</h3><p>1.如果装了福昕阅读器，你想预览文章必须为hexo s指定端口：</p>
+<pre><code>hexo s -p PORT
+</code></pre><p>2.默认的4000端口无法使用，所以你需要指定一个其他端口用于预览。<a href="http://blog.csdn.net/u012246342/article/details/51543370" target="_blank" rel="external">参考</a>      </p>
+<p>3.常用配置的设置：  <a href="http://www.cnblogs.com/syd192/p/6074323.html" target="_blank" rel="external">参考1</a>；<a href="https://github.com/yscoder/hexo-theme-indigo/wiki/%E9%85%8D%E7%BD%AE" target="_blank" rel="external">参考2</a>    </p>
+<p>4.我在修改<a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank" rel="external">hiker</a>主题的_config.yml文件的时候，以为sidebar的widgets是选择任意一个结果把下面带“-”的都注释掉，然后选一个填到“widgets:”后面（下面为错误示范）：</p>
+<p>错误：</p>
+<pre><code># Sidebar
+sidebar: left
+widgets: social 
+#- social
+#- category
+#- tag
+#- tagcloud
+#- archive
+#- recent_posts
+</code></pre><p>实际上应该是：</p>
+<pre><code>sidebar: left
+widgets: 
+- social
+- category
+- tag
+- tagcloud
+- archive
+- recent_posts
+</code></pre><p>因为这个坑差点放弃了这个主题（现在坑依然很多）  </p>
+<h3 id="关键点"><a href="#关键点" class="headerlink" title="关键点"></a>关键点</h3><ul>
+<li>创建的github repo一定要是“用户名.github.io”  </li>
+<li>配置的时候，在执行hexo init的目录和你下载主题的目录里都有一个_config.yml文件，配置的时候需要注意你修改的文件是否正确  </li>
+</ul>
+<h3 id="常用hexo命令"><a href="#常用hexo命令" class="headerlink" title="常用hexo命令:"></a>常用hexo命令:</h3><h4 id="清理目录，常用于更新博客"><a href="#清理目录，常用于更新博客" class="headerlink" title="清理目录，常用于更新博客:"></a>清理目录，常用于更新博客:</h4><pre><code>hexo clean  
+</code></pre><h4 id="生成内容"><a href="#生成内容" class="headerlink" title="生成内容:"></a>生成内容:</h4><pre><code>hexo g  
+</code></pre><h4 id="进行预览"><a href="#进行预览" class="headerlink" title="进行预览:"></a>进行预览:</h4><pre><code>hexo s
+</code></pre><h4 id="部署"><a href="#部署" class="headerlink" title="部署:"></a>部署:</h4><pre><code>hexo d 
+</code></pre><h4 id="生成博客页面（主页、归档等）"><a href="#生成博客页面（主页、归档等）" class="headerlink" title="生成博客页面（主页、归档等）:"></a>生成博客页面（主页、归档等）:</h4><pre><code>hexo new page &quot;xxx&quot;
+</code></pre><h4 id="生成博客文章（默认文章标题是你输入的文件名，可以修改）"><a href="#生成博客文章（默认文章标题是你输入的文件名，可以修改）" class="headerlink" title="生成博客文章（默认文章标题是你输入的文件名，可以修改）:"></a>生成博客文章（默认文章标题是你输入的文件名，可以修改）:</h4><pre><code>hexo new &quot;xxx&quot;
+</code></pre><h2 id="还有一点吐槽"><a href="#还有一点吐槽" class="headerlink" title="还有一点吐槽"></a>还有一点吐槽</h2><p>这个hexo主题的markdown引擎真的迷，用```来标注代码文章居然会乱，我宁愿直接按tab写代码</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/hexo/">hexo</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+  
     <article id="post-thefirstblog"  class="article article-type-post" itemscope itemprop="blogPost" >
   <div id="articleInner" class="article-inner">
     
