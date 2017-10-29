@@ -296,6 +296,97 @@
         
           <section id="main" style="float:none;">
   
+    <article id="post-regintro"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2017/10/29/regintro/">正则表达式快速入门参考</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2017/10/29/regintro/" class="article-date">
+	  <time datetime="2017-10-29T13:46:42.000Z" itemprop="datePublished">2017-10-29</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/to-Quant/">to Quant</a>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Intro"><a href="#Intro" class="headerlink" title="Intro"></a>Intro</h1><p>虽然在为VyOS写python-vyos-mgmt的时候已经被提醒过一定要学正则表达式，不过一直没空去学，然后今天准备去看看BotVS的资料的时候就看到有则关于正则的资料，遂趁开例会时的空闲时间快速入门了一把。虽然用bash的时候经常用*来rm，但是更复杂的基本不会用了。</p>
+<h1 id="资料"><a href="#资料" class="headerlink" title="资料"></a>资料</h1><p>这个cheat sheet包含了绝大多数的使用方式：</p>
+<p><img src="http://oy30yrqej.bkt.clouddn.com/pyre_ebb9ce1c-e5e8-4219-a8ae-7ee620d5f9f1.png" alt="">  </p>
+<p>更详细的文档可以参考这里：</p>
+<p><a href="http://www.cnblogs.com/huxi/archive/2010/07/04/1771073.html" target="_blank" rel="external">cheatsheet</a>   </p>
+<p>然后为了方便测试自己的正则表达式是否正确，推荐一个国人编写的运行在.Net的图形化工具Regester，最后更新在2017年6月:</p>
+<p><a href="http://deerchao.net/tools/regester/index.htm" target="_blank" rel="external">Regester</a>  </p>
+<p>他也推出了一个30分钟入门教程（虽然可能不止30分钟）：</p>
+<p><a href="http://deerchao.net/tutorials/regex/regex.htm" target="_blank" rel="external">30分钟入门</a>  </p>
+<p>不过我觉得如果不借助任何工具去学的话还是这个人的教程比较适合，他把能匹配的字符串都按代码格式显示方便理解：</p>
+<p><a href="http://www.jianshu.com/p/ac2596be9606" target="_blank" rel="external">入门</a>  </p>
+<p><a href="http://www.jianshu.com/p/555f85023a7f" target="_blank" rel="external">进阶</a></p>
+<h1 id="我觉得比较重要的内容"><a href="#我觉得比较重要的内容" class="headerlink" title="我觉得比较重要的内容"></a>我觉得比较重要的内容</h1><ol>
+<li><p>一个”.”只能匹配一个字符，N个”.”能匹配N个</p>
+</li>
+<li><p>“\”各领域都很常见的转义字符</p>
+</li>
+<li><p>“K[abc]T”只能匹配一个长度为3的，含abc任意“一个”字符的字符串，”KabT”无法被匹配，而使用这个模式可以匹配”KabT”：K[\w]*T</p>
+</li>
+<li><p>“{m}”匹配前一个字符串m次，比如”a{2}b”，如果目标字符串为”aaab”,则只能匹配出”aab”，若目标为”ab”，则无法匹配</p>
+</li>
+<li><p>“{m,n}”中，m&lt;n</p>
+</li>
+<li><p>“[A-Za-z0-9]”匹配任何字母和数字，”\w”则匹配[A-Za-z0-9_]（多一个下划线），”\s”是空白字符，大写”\w”和”\s”的规则都是原来的字符的对立规则 </p>
+</li>
+<li><p>后面加问号，比如”*?”可将匹配符变成非贪婪的</p>
+</li>
+<li><p>“^”在中括号内为否定，中括号/字符串外为头部边界，”$”则用作尾部边界</p>
+</li>
+</ol>
+<h1 id="Python的re模块的通用代码patten"><a href="#Python的re模块的通用代码patten" class="headerlink" title="Python的re模块的通用代码patten"></a>Python的re模块的通用代码patten</h1><pre><code>import re
+pattern = re.compile(&quot;K[\w]*T&quot;)
+# 无法匹配时将返回None
+res = pattern.match(&quot;K[\w]*T&quot;)
+if res:print(res.group())
+</code></pre><p>结果：</p>
+<pre><code>In [10]: if res:print(res.group())
+KabvT
+</code></pre><p>如果匹配失败：</p>
+<pre><code>In [6]: res = pattern.match(&quot;K T&quot;)
+
+In [7]: res.group()
+---------------------------------------------------------------------------
+AttributeError                            Traceback (most recent call last)
+&lt;ipython-input-7-09a435ad28f6&gt; in &lt;module&gt;()
+----&gt; 1 res.group()
+</code></pre><h1 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h1><p>和Vi一样我也不能完全记住全部快捷键，正则还是用到再具体看吧</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/正则表达式/">正则表达式</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+  
     <article id="post-depolymyblog"  class="article article-type-post" itemscope itemprop="blogPost" >
   <div id="articleInner" class="article-inner">
     
