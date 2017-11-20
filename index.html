@@ -296,6 +296,121 @@
         
           <section id="main" style="float:none;">
   
+    <article id="post-headlessfirefox"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2017/11/21/headlessfirefox/">StockClib开发小结</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2017/11/21/headlessfirefox/" class="article-date">
+	  <time datetime="2017-11-20T18:10:19.000Z" itemprop="datePublished">2017-11-21</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/to-Quant/">to Quant</a>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="StockClib更新之际"><a href="#StockClib更新之际" class="headerlink" title="StockClib更新之际"></a>StockClib更新之际</h1><p>上个周末花了点时间更新了我的StockClib项目，增加了对富途牛牛网页模拟账户交易操作的功能，同时StockClib更新到0.2。本文将会总结下开发途中的一些问题。</p>
+<h1 id="曲线救国"><a href="#曲线救国" class="headerlink" title="曲线救国"></a>曲线救国</h1><p>一开始我考虑用的量化平台是BotVS，但是BotVS有两点很难忍：  </p>
+<ol>
+<li>文档混乱，看得一脸懵逼  </li>
+<li>无法支持第三方库，意味着策略无法与外界交换数据  </li>
+</ol>
+<p>后面我换了聚宽，聚宽的教程和文档和ricequant的都差不多也很清晰，聚宽还支持用requests来交换数据，但是问题又出现了，我要加密传输交易信号才行，本来问了朋友考虑用AES加密但是后面实际玩了下，聚宽的策略运行必须先回测，但我那套策略思路要搞回测很困难，而且回测的意义不大，因此决定放弃一切量化平台（虽然前期学习必须在那些平台上练手），自己做交易接口，不做回测了。</p>
+<p>万得终端有套支持excel、matlab和python等语言的本地交易API，但是文档像吃了屎一样，富途牛牛之类的客户端无法控制意义也不大。遂找网页版的模拟交易账户，一开始是找了同花顺的，但是太简陋，没用。后来看了下新浪爱财iTrade，也不算满意，最后找到了富途牛牛模拟交易的网页版入口，用手机注册即可。最重要的是一个网页同时支持A、H和美股的交易，可玩性就强了很多了。</p>
+<p><img src="http://oy30yrqej.bkt.clouddn.com/ftnnshow" alt=""></p>
+<p>这么看来，以后要是实际跑策略实盘，估计直接用浏览器自动操作就可以了。前提是券商提供网页版下单入口。  </p>
+<h1 id="分析研究"><a href="#分析研究" class="headerlink" title="分析研究"></a>分析研究</h1><p>通过firefox抓包，我发现了富途牛牛网页交易时发送的数据结构，但是cookie有些内容搞不明白怎么生成的，于是选择了headless浏览器+splinter的方案</p>
+<p>在windows上直接用firefox测试，基本把登录、下单的测试代码弄出来了（下面是部分测试实例）：</p>
+<pre><code>In [31]: f = b.find_by_name(&apos;stockCode&apos;)
+
+In [32]: f
+Out[32]:
+[&lt;splinter.driver.webdriver.WebDriverElement at 0x6d546a0&gt;,
+ &lt;splinter.driver.webdriver.WebDriverElement at 0x6d54128&gt;]
+
+In [33]: f[1].fill(&quot;000858&quot;)
+
+In [34]:
+
+In [34]: g = b.find_by_name(&quot;price&quot;)
+
+In [35]: g
+Out[35]: [&lt;splinter.driver.webdriver.WebDriverElement at 0x6a25780&gt;]
+
+In [36]: g[0].fill(76.20)
+
+In [45]: amount = b.find_by_name(&quot;qty_str&quot;)
+
+In [46]: amount
+Out[46]: [&lt;splinter.driver.webdriver.WebDriverElement at 0x6a22320&gt;]
+
+In [47]: amount[0].fill(&quot;400&quot;)
+
+In [48]: buy = b.find_by_text(&quot;模拟买入&quot;)
+
+In [49]: buy
+Out[49]: [&lt;splinter.driver.webdriver.WebDriverElement at 0x69fa358&gt;]
+
+In [50]: buy[0].click()
+
+In [52]: bid
+Out[52]: [&lt;splinter.driver.webdriver.WebDriverElement at 0x69361d0&gt;]
+
+In [53]: bid[0].click()
+
+In [54]: confirm = b.find_by_text(&quot;确定&quot;)
+
+In [55]: confirm
+Out[55]:
+[&lt;splinter.driver.webdriver.WebDriverElement at 0x6a2d7b8&gt;,
+ &lt;splinter.driver.webdriver.WebDriverElement at 0x6a2d160&gt;]
+
+confirm[1].click()
+</code></pre><p>但是存在一个问题，无法指定撤单，只能先撤最新的单：</p>
+<p><img src="http://oy30yrqej.bkt.clouddn.com/orders.png" alt=""></p>
+<p>问题存在的原因主要是splinter不支持根据class找元素，而我那时候还没搞懂xpath，结果就放弃了基于splinter的代码（实际上只要用xpath，没有任何元素是找不到的）</p>
+<p>我的splinter的初步方案是使用click_link_by_text(“撤单”)来做撤单，但是这个就无法撤前面的单，只能撤了最新的单再撤旧单。</p>
+<p>后面基于“根据class找元素”的想法，选择了selenium，这个库是splinter的底层，splinter只是简化了使用（也相当于减少了部分功能），后面不知咋的找到了xpath的资料翻了下，发现提取xpath简单到死，直接对着元素选择检查然后右键复制xpath即可，不过chrome和firefox的xpath格式不同，前者的往往是很简短的，比如：</p>
+<pre><code>//*[@id=&apos;confirmDialog&apos;]/div[3]/span[2]/button[2]
+</code></pre><p>即使格式不同，但是都能被selenium正确识别。</p>
+<p>最后撤单逻辑通过位置来确定不同的单，然后输入一个从1数起的坐标即可选择性撤单，最新的单位置为1，旧的单位置值递增，比如上图特锐德的位置是1，中车的位置是2，只要输入准确的位置就可以撤单，但是要时刻维护一个“待成交单”的数据，不然无法撤单。</p>
+<p>因此我在StockClib里增加了ftTrader库，一个无状态的基于firefox的自动交易接口库，预计0.3会增加一个函数简化交易数据的维护，而0.4开始会逐渐增加对美股港股的支持。</p>
+<p>不过有点小问题，虽然我已经显式给selenium加了waits，但是如果网络不好，网页加载未完的话就执行交易函数的话会出现下单失败的问题，这个后面0.3会尝试修复。</p>
+<h1 id="headless"><a href="#headless" class="headerlink" title="headless"></a>headless</h1><p>我一开始想用chromeless，但是不支持python，弃。然后找headless chrome，无奈我windows的chrome是58，windows版要60才支持headless模式。后来在虚拟机里测试，但是selenium总是启动不了headless chrome，报错，而且安装贼麻烦，最后直接换headless firefox了。如果ftTrader选择debug模式，则会启动GUI版火狐，否则默认headless。headless模式下必须指定geckodriver的路径才能正常启动，刚好我的火狐更新到了57，Windows版可以测试headless模式，而linux下安装也不麻烦，apt就一句命令的事。FF最新版对比旧版的确快不少，体验较好。</p>
+<p>关于headless firefox的资料可以看这里：<a href="https://developer.mozilla.org/en-US/Firefox/Headless_mode" target="_blank" rel="external">Here</a>  </p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>完成这个交易API之后就可以着手搞策略和对应的策略执行引擎了，当然我也不希望又搞套DSL出来，策略直接是python程序就好，托管者就像supervisor一样监控运行状态就够了。不过在搞这些之前，我还是得看看传统的量化知识。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="http://selenium-python.readthedocs.io/waits.html" target="_blank" rel="external">Selenium的Waits</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Firefox/">Firefox</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+  
     <article id="post-regintro"  class="article article-type-post" itemscope itemprop="blogPost" >
   <div id="articleInner" class="article-inner">
     
