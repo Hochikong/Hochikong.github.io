@@ -296,6 +296,79 @@
         
           <section id="main" style="float:none;">
   
+    <article id="post-hypervonwinten"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2017/11/22/hypervonwinten/">Win10 Hyper-V虚拟机折腾记录</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2017/11/22/hypervonwinten/" class="article-date">
+	  <time datetime="2017-11-22T07:21:58.000Z" itemprop="datePublished">2017-11-22</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/日常折腾/">日常折腾</a>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Intro"><a href="#Intro" class="headerlink" title="Intro"></a>Intro</h1><p>本来我还是在用win7，但是越来越觉得不接收微软的安全更新简直就是要命，然后也想顺便清理下工作环境重新安装一些东西clean下，于是昨天通宵搞启动盘重装系统。装了win10 pro用Microsoft Toolkit激活了。然后安装了Docker for Windows，安装这个会自动帮我配置增加hyper-v的功能。配置完毕之后，如果你启动docker就会启用一个vswitch。这里的vswitch类似VMware的adapter。</p>
+<h1 id="配置一个能与宿主机互ping的虚拟机全流程"><a href="#配置一个能与宿主机互ping的虚拟机全流程" class="headerlink" title="配置一个能与宿主机互ping的虚拟机全流程"></a>配置一个能与宿主机互ping的虚拟机全流程</h1><ol>
+<li><p>创建一个新vswitch</p>
+</li>
+<li><p>修改现有的网络适配器，为刚才创建的vswitch提供共享</p>
+</li>
+<li><p>配置防火墙的入站规则</p>
+<p>​</p>
+</li>
+</ol>
+<p>下面就具体讲讲是怎么做的</p>
+<h2 id="1-创建vswitch"><a href="#1-创建vswitch" class="headerlink" title="1.创建vswitch"></a>1.创建vswitch</h2><p>打开Hyper-V管理器，选择“虚拟交换机管理器”：</p>
+<p><img src="http://oy30yrqej.bkt.clouddn.com/1511362113%281%29.png" alt=""></p>
+<p>然后创建一个新的“内部网络”虚拟交换机，随便命名即可，我先前创的是VS NAT：</p>
+<p><img src="http://oy30yrqej.bkt.clouddn.com/createvswitch.png" alt=""></p>
+<h2 id="2-修改网络接口"><a href="#2-修改网络接口" class="headerlink" title="2.修改网络接口"></a>2.修改网络接口</h2><p>创建完这个之后，就去控制面目板的“网络连接”选择你现在用的Internet适配器：</p>
+<p><img src="http://oy30yrqej.bkt.clouddn.com/networkadapter.png" alt=""></p>
+<p>右键选择“属性”然后切换到“共享”的页面，允许你刚才创建的vswitch访问：</p>
+<p><img src="http://oy30yrqej.bkt.clouddn.com/share.png" alt=""></p>
+<p>这样一来就完成了基本配置，这时候点开你创建的vswitch找IPv4属性，可以看到分配的IP地址和掩码：</p>
+<p><img src="http://oy30yrqej.bkt.clouddn.com/vnat.png" alt=""></p>
+<h2 id="3-修改防火墙规则"><a href="#3-修改防火墙规则" class="headerlink" title="3.修改防火墙规则"></a>3.修改防火墙规则</h2><p>在做了上面的配置之后，使用你刚才创建的NAT vswitch的虚拟机都已经能上网，宿主机也能ping通虚拟机，但是虚拟机无法ping宿主，这就需要你启用下面的防火墙入站规则：</p>
+<p><img src="http://oy30yrqej.bkt.clouddn.com/icmprule.png" alt=""></p>
+<p>然后也可以自定配置一个规则，允许来自虚拟机对宿主的任何访问：</p>
+<p><img src="http://oy30yrqej.bkt.clouddn.com/myrules.png" alt=""></p>
+<p>配置就到此为止，虚拟机和宿主能互ping且虚拟机也能上网了</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://www.cnblogs.com/staneee/p/6879842.html" target="_blank" rel="external">Ping不通的解决方法</a></p>
+<p><a href="http://blog.csdn.net/rrrfff/article/details/51168376" target="_blank" rel="external">配置NAT</a></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>Hyper-V体验还不错，不过如果不是因为要跑docker on windows我也不会装这个东西，还是使用VMware。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hyper-V/">Hyper-V</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+  
     <article id="post-headlessfirefox"  class="article article-type-post" itemscope itemprop="blogPost" >
   <div id="articleInner" class="article-inner">
     

@@ -3,22 +3,34 @@
 <head>
   <meta charset="utf-8">
   
-  <title>归档: 2017/10 | HOCHIKONG&#39;s WAPORIZer</title>
+  <title>win10 hyper-v虚拟机折腾记录 | HOCHIKONG&#39;s WAPORIZer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   
+  <meta name="keywords" content="Hyper-V" />
   
   
   
-  <meta name="description" content="Be Lazy,Be VAPOR">
-<meta property="og:type" content="website">
-<meta property="og:title" content="HOCHIKONG&#39;s WAPORIZer">
-<meta property="og:url" content="http://yoursite.com/archives/2017/10/index.html">
+  
+  <meta name="description" content="Intro本来我还是在用win7，但是越来越觉得不接收微软的安全更新简直就是要命，然后也想顺便清理下工作环境重新安装一些东西clean下，于是昨天通宵搞启动盘重装系统。装了win10 pro用Microsoft Toolkit激活了。然后安装了Docker for Windows，安装这个会自动帮我配置增加hyper-v的功能。配置完毕之后，如果你启动docker就会启用一个vswitch。这里的">
+<meta name="keywords" content="Hyper-V">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Win10 Hyper-V虚拟机折腾记录">
+<meta property="og:url" content="http://yoursite.com/2017/11/22/hypervonwinten/index.html">
 <meta property="og:site_name" content="HOCHIKONG&#39;s WAPORIZer">
-<meta property="og:description" content="Be Lazy,Be VAPOR">
+<meta property="og:description" content="Intro本来我还是在用win7，但是越来越觉得不接收微软的安全更新简直就是要命，然后也想顺便清理下工作环境重新安装一些东西clean下，于是昨天通宵搞启动盘重装系统。装了win10 pro用Microsoft Toolkit激活了。然后安装了Docker for Windows，安装这个会自动帮我配置增加hyper-v的功能。配置完毕之后，如果你启动docker就会启用一个vswitch。这里的">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://oy30yrqej.bkt.clouddn.com/1511362113%281%29.png">
+<meta property="og:image" content="http://oy30yrqej.bkt.clouddn.com/createvswitch.png">
+<meta property="og:image" content="http://oy30yrqej.bkt.clouddn.com/networkadapter.png">
+<meta property="og:image" content="http://oy30yrqej.bkt.clouddn.com/share.png">
+<meta property="og:image" content="http://oy30yrqej.bkt.clouddn.com/vnat.png">
+<meta property="og:image" content="http://oy30yrqej.bkt.clouddn.com/icmprule.png">
+<meta property="og:image" content="http://oy30yrqej.bkt.clouddn.com/myrules.png">
+<meta property="og:updated_time" content="2017-11-22T15:28:04.355Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="HOCHIKONG&#39;s WAPORIZer">
-<meta name="twitter:description" content="Be Lazy,Be VAPOR">
+<meta name="twitter:title" content="Win10 Hyper-V虚拟机折腾记录">
+<meta name="twitter:description" content="Intro本来我还是在用win7，但是越来越觉得不接收微软的安全更新简直就是要命，然后也想顺便清理下工作环境重新安装一些东西clean下，于是昨天通宵搞启动盘重装系统。装了win10 pro用Microsoft Toolkit激活了。然后安装了Docker for Windows，安装这个会自动帮我配置增加hyper-v的功能。配置完毕之后，如果你启动docker就会启用一个vswitch。这里的">
+<meta name="twitter:image" content="http://oy30yrqej.bkt.clouddn.com/1511362113%281%29.png">
   
     <link rel="alternate" href="/atom.xml" title="HOCHIKONG&#39;s WAPORIZer" type="application/atom+xml">
   
@@ -57,8 +69,6 @@
   
 
   
-    <link rel="stylesheet" href="/css/archive.css" >
-  
   
   
     <link rel="stylesheet" href="/css/vdonate.css" >
@@ -68,7 +78,7 @@
 
 
 
-  <body>
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
 
 
   
@@ -91,7 +101,7 @@
             
               <a class="brand" style="
                  margin-top: 0px;"  
-                 >
+                href="#" data-toggle="modal" data-target="#myModal" >
                   <img width="124px" height="124px" alt="Hike News" src="/css/images/vapor3.png">
               </a>
             
@@ -164,203 +174,143 @@
             
       <div id="content" class="outer">
         
-          <section id="main">
-  <div class="archives-tags-wrap"><blockquote><span>嗯，目前共计5篇文章</span></blockquote>
-
-
-<!-- 分页显示 -->
-
-	
-	
-		
-		
-		  
-		  
-		  <section class="archives-wrap">
-		    <div class="archive-year-wrap">
-		      <h1><a href="/archives/2017" class="archive-year">2017</a></h1>
-		    </div>
-		    <div class="archives">
-		
-		<article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      
-	<a href="/2017/10/29/regintro/" class="archive-article-date">
-	  <time datetime="2017-10-29T13:46:42.000Z" itemprop="datePublished">2017-10-29</time>
-	</a>
-
-      
+          <section id="main" style="float:none;"><article id="post-hypervonwinten" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
   
-    <h1 class="thumb" itemprop="name">
-      <a class="archive-article-title" href="/2017/10/29/regintro/">正则表达式快速入门参考</a>
+    <h1 class="thumb" class="article-title" itemprop="name">
+      Win10 Hyper-V虚拟机折腾记录
     </h1>
   
 
-    </header>
-  </div>
-</article>
-	
-		
-		
-		<article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
+      </header>
+    
+    <div class="article-meta">
       
-	<a href="/2017/10/21/depolymyblog/" class="archive-article-date">
-	  <time datetime="2017-10-20T18:09:40.000Z" itemprop="datePublished">2017-10-21</time>
+	<a href="/2017/11/22/hypervonwinten/" class="article-date">
+	  <time datetime="2017-11-22T07:21:58.000Z" itemprop="datePublished">2017-11-22</time>
 	</a>
 
       
-  
-    <h1 class="thumb" itemprop="name">
-      <a class="archive-article-title" href="/2017/10/21/depolymyblog/">博客部署记录</a>
-    </h1>
-  
+    <a class="article-category-link" href="/categories/日常折腾/">日常折腾</a>
 
-    </header>
-  </div>
-</article>
-	
-		
-		
-		<article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
       
-	<a href="/2017/10/20/thefirstblog/" class="archive-article-date">
-	  <time datetime="2017-10-20T11:08:01.000Z" itemprop="datePublished">2017-10-20</time>
+	<a class="article-views">
+	<span id="busuanzi_container_page_pv">
+		阅读量<span id="busuanzi_value_page_pv"></span>
+	</span>
 	</a>
 
+    </div>
+    <div class="article-entry" itemprop="articleBody">
       
-  
-    <h1 class="thumb" itemprop="name">
-      <a class="archive-article-title" href="/2017/10/20/thefirstblog/">这是我搭建的Hexo的第一篇博客</a>
-    </h1>
-  
+        <h1 id="Intro"><a href="#Intro" class="headerlink" title="Intro"></a>Intro</h1><p>本来我还是在用win7，但是越来越觉得不接收微软的安全更新简直就是要命，然后也想顺便清理下工作环境重新安装一些东西clean下，于是昨天通宵搞启动盘重装系统。装了win10 pro用Microsoft Toolkit激活了。然后安装了Docker for Windows，安装这个会自动帮我配置增加hyper-v的功能。配置完毕之后，如果你启动docker就会启用一个vswitch。这里的vswitch类似VMware的adapter。</p>
+<h1 id="配置一个能与宿主机互ping的虚拟机全流程"><a href="#配置一个能与宿主机互ping的虚拟机全流程" class="headerlink" title="配置一个能与宿主机互ping的虚拟机全流程"></a>配置一个能与宿主机互ping的虚拟机全流程</h1><ol>
+<li><p>创建一个新vswitch</p>
+</li>
+<li><p>修改现有的网络适配器，为刚才创建的vswitch提供共享</p>
+</li>
+<li><p>配置防火墙的入站规则</p>
+<p>​</p>
+</li>
+</ol>
+<p>下面就具体讲讲是怎么做的</p>
+<h2 id="1-创建vswitch"><a href="#1-创建vswitch" class="headerlink" title="1.创建vswitch"></a>1.创建vswitch</h2><p>打开Hyper-V管理器，选择“虚拟交换机管理器”：</p>
+<p><img src="http://oy30yrqej.bkt.clouddn.com/1511362113%281%29.png" alt=""></p>
+<p>然后创建一个新的“内部网络”虚拟交换机，随便命名即可，我先前创的是VS NAT：</p>
+<p><img src="http://oy30yrqej.bkt.clouddn.com/createvswitch.png" alt=""></p>
+<h2 id="2-修改网络接口"><a href="#2-修改网络接口" class="headerlink" title="2.修改网络接口"></a>2.修改网络接口</h2><p>创建完这个之后，就去控制面目板的“网络连接”选择你现在用的Internet适配器：</p>
+<p><img src="http://oy30yrqej.bkt.clouddn.com/networkadapter.png" alt=""></p>
+<p>右键选择“属性”然后切换到“共享”的页面，允许你刚才创建的vswitch访问：</p>
+<p><img src="http://oy30yrqej.bkt.clouddn.com/share.png" alt=""></p>
+<p>这样一来就完成了基本配置，这时候点开你创建的vswitch找IPv4属性，可以看到分配的IP地址和掩码：</p>
+<p><img src="http://oy30yrqej.bkt.clouddn.com/vnat.png" alt=""></p>
+<h2 id="3-修改防火墙规则"><a href="#3-修改防火墙规则" class="headerlink" title="3.修改防火墙规则"></a>3.修改防火墙规则</h2><p>在做了上面的配置之后，使用你刚才创建的NAT vswitch的虚拟机都已经能上网，宿主机也能ping通虚拟机，但是虚拟机无法ping宿主，这就需要你启用下面的防火墙入站规则：</p>
+<p><img src="http://oy30yrqej.bkt.clouddn.com/icmprule.png" alt=""></p>
+<p>然后也可以自定配置一个规则，允许来自虚拟机对宿主的任何访问：</p>
+<p><img src="http://oy30yrqej.bkt.clouddn.com/myrules.png" alt=""></p>
+<p>配置就到此为止，虚拟机和宿主能互ping且虚拟机也能上网了</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://www.cnblogs.com/staneee/p/6879842.html" target="_blank" rel="external">Ping不通的解决方法</a></p>
+<p><a href="http://blog.csdn.net/rrrfff/article/details/51168376" target="_blank" rel="external">配置NAT</a></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>Hyper-V体验还不错，不过如果不是因为要跑docker on windows我也不会装这个东西，还是使用VMware。</p>
 
-    </header>
+      
+    </div>
+    <footer class="article-footer">
+      
+        <div id="donation_div"></div>
+
+<script src="/js/vdonate.js"></script>
+<script>
+var a = new Donate({
+  title: '如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作!', // 可选参数，打赏标题
+  btnText: '打赏支持', // 可选参数，打赏按钮文字
+  el: document.getElementById('donation_div'),
+  wechatImage: 'http://oy30yrqej.bkt.clouddn.com/we.jpg',
+  alipayImage: 'http://oy30yrqej.bkt.clouddn.com/ali.jpg'
+});
+</script>
+      
+      
+        
+	<div id="comment">
+		<!-- 来必力City版安装代码 -->
+		<div id="lv-container" data-id="city" data-uid="MTAyMC8zMTQzNy84MDAx">
+		<script type="text/javascript">
+		   (function(d, s) {
+		       var j, e = d.getElementsByTagName(s)[0];
+
+		       if (typeof LivereTower === 'function') { return; }
+
+		       j = d.createElement(s);
+		       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+		       j.async = true;
+
+		       e.parentNode.insertBefore(j, e);
+		   })(document, 'script');
+		</script>
+		<noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+		</div>
+		<!-- City版安装代码已完成 -->
+	</div>
+
+
+
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hyper-V/">Hyper-V</a></li></ul>
+
+    </footer>
   </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2017/11/21/headlessfirefox/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">StockClib开发小结</div>
+    </a>
+  
+</nav>
+
+  
 </article>
-	
-	
-		</div></section>
-	
 
-	<!-- 页数指示器 -->
-	
+<!-- Table of Contents -->
 
-
-
-
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Intro"><span class="nav-number">1.</span> <span class="nav-text">Intro</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#配置一个能与宿主机互ping的虚拟机全流程"><span class="nav-number">2.</span> <span class="nav-text">配置一个能与宿主机互ping的虚拟机全流程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-创建vswitch"><span class="nav-number">2.1.</span> <span class="nav-text">1.创建vswitch</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-修改网络接口"><span class="nav-number">2.2.</span> <span class="nav-text">2.修改网络接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-修改防火墙规则"><span class="nav-number">2.3.</span> <span class="nav-text">3.修改防火墙规则</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol>
+    
+    </div>
+  </aside>
 </section>
-          <aside id="sidebar">
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">关注我</h3>
-    <div class="widget widget_athemes_social_icons">
-
-    	<ul class="clearfix widget-social-icons">   
-    	
-          
-     			  <li><a href="https://github.com/Hochikong" title="Github"><i class="fa fa-github" aria-hidden="true"></i></a></li> 
-          
-   		
-          
-            <li><a href="mailto:hochikong@foxmail.com?subject=请联系我&body=我能帮你什么" title="email"><i class="fa fa-envelope" aria-hidden="true"></i></a></li> 
-          
-   		
-   		</ul>
-
-
-   		<!--
-   		<ul class="clearfix widget-social-icons">   		
-   		<li class="widget-si-twitter"><a href="http://twitter.com" title="Twitter"><i class="ico-twitter"></i></a></li> 
-		<li class="widget-si-facebook"><a href="http://facebook.com" title="Facebook"><i class="ico-facebook"></i></a></li>
-			<li class="widget-si-gplus"><a href="http://plus.google.com" title="Google+"><i class="ico-gplus"></i></a></li>
-			<li class="widget-si-pinterest"><a href="http://pinterest.com" title="Pinterest"><i class="ico-pinterest"></i></a></li>
-			<li class="widget-si-flickr"><a href="http://flickr.com" title="Flickr"><i class="ico-flickr"></i></a></li>
-			<li class="widget-si-instagram"><a href="http://instagram.com" title="Instagram"><i class="ico-instagram"></i></a></li>
-		</ul> -->
-
-    </div>
-  </div>
-
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">分类</h3>
-    <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/to-Quant/">to Quant</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/日常折腾/">日常折腾</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/随笔/">随笔</a><span class="category-list-count">1</span></li></ul>
-    </div>
-  </div>
-
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">标签</h3>
-    <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Firefox/">Firefox</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hyper-V/">Hyper-V</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/helloWorld/">helloWorld</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hexo/">hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/正则表达式/">正则表达式</a><span class="tag-list-count">1</span></li></ul>
-    </div>
-  </div>
-
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">标签云</h3>
-    <div class="widget tagcloud">
-      <a href="/tags/Firefox/" style="font-size: 10px;">Firefox</a> <a href="/tags/Hyper-V/" style="font-size: 10px;">Hyper-V</a> <a href="/tags/helloWorld/" style="font-size: 10px;">helloWorld</a> <a href="/tags/hexo/" style="font-size: 10px;">hexo</a> <a href="/tags/正则表达式/" style="font-size: 10px;">正则表达式</a>
-    </div>
-  </div>
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">归档</h3>
-
-    <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a><span class="archive-list-count">3</span></li></ul>
-    </div>
-  </div>
-
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">最新文章</h3>
-    <div class="widget">
-      <ul>
-        
-          <li>
-            <a href="/2017/11/22/hypervonwinten/">Win10 Hyper-V虚拟机折腾记录</a>
-          </li>
-        
-          <li>
-            <a href="/2017/11/21/headlessfirefox/">StockClib开发小结</a>
-          </li>
-        
-          <li>
-            <a href="/2017/10/29/regintro/">正则表达式快速入门参考</a>
-          </li>
-        
-          <li>
-            <a href="/2017/10/21/depolymyblog/">博客部署记录</a>
-          </li>
-        
-          <li>
-            <a href="/2017/10/20/thefirstblog/">这是我搭建的Hexo的第一篇博客</a>
-          </li>
-        
-      </ul>
-    </div>
-  </div>
-
-  
-</aside>
         
       </div>
       
@@ -460,6 +410,8 @@
 
 
 
+  <script src="/js/dialog.js"></script>
+
 
 
 
@@ -543,6 +495,8 @@
   
   <a id="rocket" href="#top" class=""></a>
   <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
   
 </body>
 </html>
