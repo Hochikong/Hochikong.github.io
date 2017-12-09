@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>多进程服务器折腾、实现 | HOCHIKONG&#39;s WAPORIZer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="multiprocessing" />
+  
+  
+  
+  
+  <meta name="description" content="前言最近为了写个回测平台真的累成狗，项目地址TradeServer， 目前实现了下单买入卖出、撤单、查看未成交订单、查看用户信息和余额、查看完整操作记录，查看交易记录和收益统计等功能。主要结构为Flask实现的RESTful API和一个包含三个进程的服务器。Flask那个不难，就是设计好json请求结构然后根据情况返回合适的结果即可，但是另外一个含三个进程的服务器就有点麻烦了。 坑1众所周知，P">
+<meta name="keywords" content="multiprocessing">
+<meta property="og:type" content="article">
+<meta property="og:title" content="多进程服务器折腾、实现">
+<meta property="og:url" content="http://yoursite.com/2017/12/09/multiprocessingexp/index.html">
+<meta property="og:site_name" content="HOCHIKONG&#39;s WAPORIZer">
+<meta property="og:description" content="前言最近为了写个回测平台真的累成狗，项目地址TradeServer， 目前实现了下单买入卖出、撤单、查看未成交订单、查看用户信息和余额、查看完整操作记录，查看交易记录和收益统计等功能。主要结构为Flask实现的RESTful API和一个包含三个进程的服务器。Flask那个不难，就是设计好json请求结构然后根据情况返回合适的结果即可，但是另外一个含三个进程的服务器就有点麻烦了。 坑1众所周知，P">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2017-12-09T13:26:13.555Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="多进程服务器折腾、实现">
+<meta name="twitter:description" content="前言最近为了写个回测平台真的累成狗，项目地址TradeServer， 目前实现了下单买入卖出、撤单、查看未成交订单、查看用户信息和余额、查看完整操作记录，查看交易记录和收益统计等功能。主要结构为Flask实现的RESTful API和一个包含三个进程的服务器。Flask那个不难，就是设计好json请求结构然后根据情况返回合适的结果即可，但是另外一个含三个进程的服务器就有点麻烦了。 坑1众所周知，P">
+  
+    <link rel="alternate" href="/atom.xml" title="HOCHIKONG&#39;s WAPORIZer" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/vapor3.png">
+  <link rel="apple-touch-icon" href="/css/images/vapor3.png">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/9749f0/00000000000000000001008f/27/l?subset_id=2&fvd=n5) format("woff2");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/90cf9f/000000000000000000010091/27/l?subset_id=2&fvd=n7) format("woff2");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/8a5494/000000000000000000013365/27/l?subset_id=2&fvd=n4) format("woff2");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/d337d8/000000000000000000010095/27/l?subset_id=2&fvd=i4) format("woff2");font-weight:400;font-style:italic;}</style>
+  <link rel="stylesheet" href="/css/style.css">
+
+  <script src="/js/jquery-3.1.1.min.js"></script>
+  <script src="/js/bootstrap.js"></script>
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    <link rel="stylesheet" href="/css/dialog.css">
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+    <link rel="stylesheet" href="/css/vdonate.css" >
+  
+
+</head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="
+                 margin-top: 0px;"  
+                href="#" data-toggle="modal" data-target="#myModal" >
+                  <img width="124px" height="124px" alt="Hike News" src="/css/images/vapor3.png">
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">首页</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">归档</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">分类</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">标签</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">关于</a> </li>
+                
+                  <li> <a class="main-nav-link" href="https://ckho.top">Service</a> </li>
+                
+                  <li> <a class="main-nav-link" href="http://h2q.weebly.com">Works</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="请输入关键词..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(无标题)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-multiprocessingexp" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      多进程服务器折腾、实现
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2017/12/09/multiprocessingexp/" class="article-date">
+	  <time datetime="2017-12-09T12:25:33.000Z" itemprop="datePublished">2017-12-09</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/to-Quant/">to Quant</a>
+
+      
+	<a class="article-views">
+	<span id="busuanzi_container_page_pv">
+		阅读量<span id="busuanzi_value_page_pv"></span>
+	</span>
+	</a>
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近为了写个回测平台真的累成狗，项目地址<a href="https://github.com/Hochikong/TradeServer" target="_blank" rel="external">TradeServer</a>， 目前实现了下单买入卖出、撤单、查看未成交订单、查看用户信息和余额、查看完整操作记录，查看交易记录和收益统计等功能。主要结构为Flask实现的RESTful API和一个包含三个进程的服务器。Flask那个不难，就是设计好json请求结构然后根据情况返回合适的结果即可，但是另外一个含三个进程的服务器就有点麻烦了。</p>
+<h3 id="坑1"><a href="#坑1" class="headerlink" title="坑1"></a>坑1</h3><p>众所周知，Python的多线程是鸡肋，我之前的<a href="https://github.com/Hochikong/SoraScraper" target="_blank" rel="external">爬虫服务器</a>用了rpyc做服务器主体，爬虫函数用了concurrent.futures的ThreadPoolExecutor，本来我是想用多进程实现的，但是发现rpyc做服务主体下你就再也没法用multiprocessing的Pool来执行任务了。现在我的交易服务器需要实现撮合订单或者等待机会撮合，需要多个进程协同操作。</p>
+<p>首先是一个进程负责检查数据库某个键的值，如果设置为run，则开始撮合订单，如果设置为stop或其他不是run的值，就会sleep一定的时间然后再检查。那么假设我这个进程能查到这个数据库的键的值为run那么怎样才能让其他进程知道这个消息呢？一般来说最好是使用actor模型，基于消息传递，比如multiprocessing的Queue模块，但是这个交易服务器并不需要那么麻烦，只要一个共享内存就行了。在multiprocessing里可以用Array或者Value来在程序中设置一个进程间都能读写的变量，关于Value或者Array的文档可以看<a href="https://docs.python.org/3.6/library/multiprocessing.html" target="_blank" rel="external">这里</a>，17.2.2.6部分，实现上好像是基于ctypes的共享内存，还有个更高级的Manager，能提供更多数据类型。</p>
+<p>这里给一段代码简单地展示下Array的用法pattern：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">from multiprocessing import Process</div><div class="line">from multiprocessing.sharedctypes import Array</div><div class="line">import time</div><div class="line"></div><div class="line">def f():</div><div class="line">    while True:</div><div class="line">        time.sleep(2)</div><div class="line">        print(time.strftime(&quot;%Y-%m-%d %H:%M:%S&quot;, time.localtime()))</div><div class="line"></div><div class="line">if __name__ == &apos;__main__&apos;:</div><div class="line">    num = Array(&apos;c&apos;, b&apos;hello world&apos;)</div><div class="line"></div><div class="line">    p = Process(target=f, args=())</div><div class="line">    p.start()</div><div class="line">    p.join()</div><div class="line"></div><div class="line">    print(bytes.decode(num.value))</div></pre></td></tr></table></figure>
+<p>上面的例子里，首先要从multiprocessing.sharedctypes导入相应的模块，然后创建一个共享变量num，第一个参数是数值类型。上面的例子是char，可以存一定长度的字符类型，即bytes，在python3里可以通过str的encode来把str转换为bytes，也可以用bytes的decode转换为str类型，然后我们就可以把经过encode的字符串放在Array的第二个参数里，如果其他进程想查看这个共享变量的值，直接用num.value就可以获取bytes的值，再转为字符串就不难了。</p>
+<p>下面是Array的输入类型对照表：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">&apos;c&apos;: ctypes.c_char,  &apos;u&apos;: ctypes.c_wchar,</div><div class="line">&apos;b&apos;: ctypes.c_byte,  &apos;B&apos;: ctypes.c_ubyte,</div><div class="line">&apos;h&apos;: ctypes.c_short, &apos;H&apos;: ctypes.c_ushort,</div><div class="line">&apos;i&apos;: ctypes.c_int,   &apos;I&apos;: ctypes.c_uint,</div><div class="line">&apos;l&apos;: ctypes.c_long,  &apos;L&apos;: ctypes.c_ulong,</div><div class="line">&apos;f&apos;: ctypes.c_float, &apos;d&apos;: ctypes.c_double</div></pre></td></tr></table></figure>
+<p>总之记住普通的全局变量是无法在进程间共享的。</p>
+<h3 id="坑2"><a href="#坑2" class="headerlink" title="坑2"></a>坑2</h3><p>解决了共享内存的问题之后，然后是循环任务的问题。一个撮合服务器，应该每隔一段时间获取用户提交的交易请求，然后根据股票现价等信息进行判定是否能交易。我需要引入另外两个进程，一个用来检查订单然后看能不能交易，另一个用来进行损益统计。我相信很多人查multiprocessing的代码范例都是这种：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">from multiprocessing import Process</div><div class="line">import os</div><div class="line"></div><div class="line"># 子进程要执行的代码</div><div class="line">def run_proc(name):</div><div class="line">    print &apos;Run child process %s (%s)...&apos; % (name, os.getpid())</div><div class="line"></div><div class="line">if __name__==&apos;__main__&apos;:</div><div class="line">    print &apos;Parent process %s.&apos; % os.getpid()</div><div class="line">    p = Process(target=run_proc, args=(&apos;test&apos;,))</div><div class="line">    print &apos;Process will start.&apos;</div><div class="line">    p.start()</div><div class="line">    p.join()</div><div class="line">    print &apos;Process end.&apos;</div></pre></td></tr></table></figure>
+<p>一看似乎没问题，然而这个程序就是执行一次的，既然要反复检查订单是否能成交就要while循环啊，那么这个while要放在哪？</p>
+<p>放在main后面？不行的，如果使用Process来实现多进程，下面的代码pattern是不行的：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">if __name__ == &quot;__main__&quot;:</div><div class="line">	while True:</div><div class="line">		p = Process(xxx)</div><div class="line">		p.start()</div><div class="line">		p.join()</div><div class="line">		p.close()</div></pre></td></tr></table></figure>
+<p>这种pattern也是不行，会提示你创建了多个进程引起冲突：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">if __name__ == &quot;__main__&quot;:</div><div class="line">	p = Process(xxx)</div><div class="line">	while True:</div><div class="line">		p.start()</div></pre></td></tr></table></figure>
+<p>这个代码意味着你每次循环都创建Process对象然后执行，那么你干嘛不用rpyc写个rpc服务器然后写个普通的while循环的代码来发送请求？</p>
+<p>我目前找到的比较ok的多进程服务器代码pattern还是前面的Array例子那个，把while循环放在函数里，main后面就创建Process对象，start()之后这个进程就会一直执行函数里的while循环来打印此刻的时间</p>
+<p>下面的pattern在我的撮合服务器代码里也用到：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">def func():</div><div class="line">	while True:</div><div class="line">		exec xxx</div><div class="line">if __name__ == &quot;__main__&quot;:</div><div class="line">	p = Process(target=func,args=(xxx,xxx))</div><div class="line">	p.start()</div><div class="line">	p.join</div></pre></td></tr></table></figure>
+<p>不过要注意的是，函数里的while循环最好加上time.sleep()，不然你的的CPU使用率很快就会急剧上升，至少不加sleep我的笔记本CPU风扇没多久就疯转。</p>
+<p>有兴趣的可以深入阅读下我的TradeServer的omserver.py代码。</p>
+<h3 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h3><p>并发、并行是个不简单的话题，不过找到合适的代码pattern就很容易写了。还有，还在用py2的，尽可能还是迁移到3.x吧，至少我现在是用python 3.6了。</p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://docs.python.org/3.6/library/multiprocessing.html" target="_blank" rel="external">官方参考文档</a></p>
+<p><a href="https://docs.lvrui.io/2016/07/24/Python%E4%B8%AD%E5%A4%9A%E8%BF%9B%E7%A8%8B%E4%B9%8B%E9%97%B4%E7%9A%84%E6%95%B0%E6%8D%AE%E5%85%B1%E4%BA%AB/" target="_blank" rel="external">多进程数据共享（好文）</a></p>
+<p><a href="http://xiaorui.cc/2016/05/10/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90multiprocessing%E7%9A%84value-array%E5%85%B1%E4%BA%AB%E5%86%85%E5%AD%98%E5%8E%9F%E7%90%86/" target="_blank" rel="external">共享内存实现原理</a></p>
+<p><a href="https://my.oschina.net/leejun2005/blog/203148" target="_blank" rel="external">如何共享变量（很老的文章）</a></p>
+<p><a href="http://blog.csdn.net/q_l_s/article/details/53339473" target="_blank" rel="external">别人的学习笔记</a></p>
+<p><a href="https://www.cnblogs.com/kaituorensheng/p/4445418.html" target="_blank" rel="external">多进程编程</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        <div id="donation_div"></div>
+
+<script src="/js/vdonate.js"></script>
+<script>
+var a = new Donate({
+  title: '如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作!', // 可选参数，打赏标题
+  btnText: '打赏支持', // 可选参数，打赏按钮文字
+  el: document.getElementById('donation_div'),
+  wechatImage: 'http://oy30yrqej.bkt.clouddn.com/we.jpg',
+  alipayImage: 'http://oy30yrqej.bkt.clouddn.com/ali.jpg'
+});
+</script>
+      
+      
+        
+	<div id="comment">
+		<!-- 来必力City版安装代码 -->
+		<div id="lv-container" data-id="city" data-uid="MTAyMC8zMTQzNy84MDAx">
+		<script type="text/javascript">
+		   (function(d, s) {
+		       var j, e = d.getElementsByTagName(s)[0];
+
+		       if (typeof LivereTower === 'function') { return; }
+
+		       j = d.createElement(s);
+		       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+		       j.async = true;
+
+		       e.parentNode.insertBefore(j, e);
+		   })(document, 'script');
+		</script>
+		<noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+		</div>
+		<!-- City版安装代码已完成 -->
+	</div>
+
+
+
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/multiprocessing/">multiprocessing</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2017/11/22/hypervonwinten/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">Win10 Hyper-V虚拟机折腾记录</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#坑1"><span class="nav-number">1.1.</span> <span class="nav-text">坑1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#坑2"><span class="nav-number">1.2.</span> <span class="nav-text">坑2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#结语"><span class="nav-number">1.3.</span> <span class="nav-text">结语</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考"><span class="nav-number">1.4.</span> <span class="nav-text">参考</span></a></li></ol></li></ol>
+    
+    </div>
+  </aside>
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2017 - 2017 HOCHIKONG&#39;s WAPORIZer All Rights Reserved.</p>
+	      
+	      
+    		<p class="busuanzi_uv">
+				访客数 : <span id="busuanzi_value_site_uv"></span> |  
+				访问量 : <span id="busuanzi_value_site_pv"></span>
+		    </p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+    <a href="https://ckho.top" class="mobile-nav-link">Service</a>
+  
+    <a href="http://h2q.weebly.com" class="mobile-nav-link">Works</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+  <script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+	<div style="display: none;">
+    <script src="https://s95.cnzz.com/z_stat.php?id=1260716016&web_id=1260716016" language="JavaScript"></script>
+  </div>
+
+
+
+	<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+	</script>
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            HOCHIKONG&#39;s WAPORIZer
+          </div>
+          <div class="panel-body">
+            Copyright © 2017 Hochikong All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>
