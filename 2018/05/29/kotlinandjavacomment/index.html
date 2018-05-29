@@ -19,7 +19,7 @@
 <meta property="og:site_name" content="HOCHIKONG&#39;s WAPORIZer">
 <meta property="og:description" content="前言经过一段时间，我已经把Kotlin的学习基本搞定，虽然最近在学Vue.js，但是还是有在关注Kotlin的事。今天偶然看到一篇文章，讲的是Allegro（一家波兰的购物平台，可能是类似淘宝的网站）从Java转到Kotlin又转回Java的事。背景是Allegro在2017年夏天计划写个微服务，为了尝试新的技术然后转到Kotlin上，使用Groovy+Spock做测试，而在2018年他们又把微服">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2018-05-29T16:46:41.464Z">
+<meta property="og:updated_time" content="2018-05-29T17:18:43.479Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="评论一篇关于Kotlin与Java的文章">
 <meta name="twitter:description" content="前言经过一段时间，我已经把Kotlin的学习基本搞定，虽然最近在学Vue.js，但是还是有在关注Kotlin的事。今天偶然看到一篇文章，讲的是Allegro（一家波兰的购物平台，可能是类似淘宝的网站）从Java转到Kotlin又转回Java的事。背景是Allegro在2017年夏天计划写个微服务，为了尝试新的技术然后转到Kotlin上，使用Groovy+Spock做测试，而在2018年他们又把微服">
@@ -212,7 +212,7 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Utils</span> </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">static</span> String <span class="title">format</span><span class="params">(String text)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> text.isEmpty() ? <span class="keyword">null</span> : text;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>上面的Java函数可能返回null也可能返回字符串，如果在Kotlin里调用这个函数的话，返回的是T?，如果不经处理直接val f:String = Utils.format(text)，就没有考虑到该方法可能会返回null，从而抛出了NPE。或者使用elvis运算符，当format返回null的时候设置返回值为一个空字符串；再或者使用”?.”实现安全调用，或者不指定f的变量类型，但是也会抛出NPE，当然可以使用Kotlin不建议的”!!”，声明f不为T?，但是还是会抛NPE。我觉得这个的确是Kotlin的问题，搞了个T!的平台类型，导致复杂化，但是我个人认为最佳实践是用elvis。希望在后面的版本里Kotlin能着手解决这个问题。</p>
 <h3 id="4-类的字面值-Class-literals"><a href="#4-类的字面值-Class-literals" class="headerlink" title="4.类的字面值(Class literals)"></a>4.类的字面值(Class literals)</h3><p>在Java里，可以直接通过CLASS.class获取字面值：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"></div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Gson gson = <span class="keyword">new</span> GsonBuilder().registerTypeAdapter(LocalDate.class, <span class="keyword">new</span> LocalDateAdapter()).create();</div></pre></td></tr></table></figure>
 <p>但是Kotlin里分了两种class，KClass与Class：</p>
 <figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">val</span> kotlinClass : KClass&lt;LocalDate&gt; = LocalDate::<span class="class"><span class="keyword">class</span></span></div><div class="line"><span class="keyword">val</span> javaClass : Class&lt;LocalDate&gt; = LocalDate::<span class="class"><span class="keyword">class</span>.<span class="title">java</span></span></div></pre></td></tr></table></figure>
 <p>KClass是Kotlin特有的反射API，用kotlin-reflect的时候基本都是基于KClass的。虽然我看到有些资料说建议用Java反射之类的。不过Kotlin的这种字面值的确用起来较为繁琐。</p>
