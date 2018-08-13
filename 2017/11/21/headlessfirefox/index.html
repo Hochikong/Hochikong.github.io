@@ -19,13 +19,13 @@
 <meta property="og:site_name" content="HOCHIKONG&#39;s WAPORIZer">
 <meta property="og:description" content="StockClib更新之际上个周末花了点时间更新了我的StockClib项目，增加了对富途牛牛网页模拟账户交易操作的功能，同时StockClib更新到0.2。本文将会总结下开发途中的一些问题。 曲线救国一开始我考虑用的量化平台是BotVS，但是BotVS有两点很难忍：    文档混乱，看得一脸懵逼   无法支持第三方库，意味着策略无法与外界交换数据    后面我换了聚宽，聚宽的教程和文档和rice">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://oy30yrqej.bkt.clouddn.com/ftnnshow">
-<meta property="og:image" content="http://oy30yrqej.bkt.clouddn.com/orders.png">
-<meta property="og:updated_time" content="2017-11-20T18:58:24.715Z">
+<meta property="og:image" content="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/67369473.jpg">
+<meta property="og:image" content="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/53010563.jpg">
+<meta property="og:updated_time" content="2018-08-13T13:12:00.308Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="StockClib开发小结">
 <meta name="twitter:description" content="StockClib更新之际上个周末花了点时间更新了我的StockClib项目，增加了对富途牛牛网页模拟账户交易操作的功能，同时StockClib更新到0.2。本文将会总结下开发途中的一些问题。 曲线救国一开始我考虑用的量化平台是BotVS，但是BotVS有两点很难忍：    文档混乱，看得一脸懵逼   无法支持第三方库，意味着策略无法与外界交换数据    后面我换了聚宽，聚宽的教程和文档和rice">
-<meta name="twitter:image" content="http://oy30yrqej.bkt.clouddn.com/ftnnshow">
+<meta name="twitter:image" content="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/67369473.jpg">
   
     <link rel="alternate" href="/atom.xml" title="HOCHIKONG&#39;s WAPORIZer" type="application/atom+xml">
   
@@ -210,7 +210,7 @@
 </ol>
 <p>后面我换了聚宽，聚宽的教程和文档和ricequant的都差不多也很清晰，聚宽还支持用requests来交换数据，但是问题又出现了，我要加密传输交易信号才行，本来问了朋友考虑用AES加密但是后面实际玩了下，聚宽的策略运行必须先回测，但我那套策略思路要搞回测很困难，而且回测的意义不大，因此决定放弃一切量化平台（虽然前期学习必须在那些平台上练手），自己做交易接口，不做回测了。</p>
 <p>万得终端有套支持excel、matlab和python等语言的本地交易API，但是文档像吃了屎一样，富途牛牛之类的客户端无法控制意义也不大。遂找网页版的模拟交易账户，一开始是找了同花顺的，但是太简陋，没用。后来看了下新浪爱财iTrade，也不算满意，最后找到了富途牛牛模拟交易的网页版入口，用手机注册即可。最重要的是一个网页同时支持A、H和美股的交易，可玩性就强了很多了。</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/ftnnshow" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/67369473.jpg" alt=""></p>
 <p>这么看来，以后要是实际跑策略实盘，估计直接用浏览器自动操作就可以了。前提是券商提供网页版下单入口。  </p>
 <h1 id="分析研究"><a href="#分析研究" class="headerlink" title="分析研究"></a>分析研究</h1><p>通过firefox抓包，我发现了富途牛牛网页交易时发送的数据结构，但是cookie有些内容搞不明白怎么生成的，于是选择了headless浏览器+splinter的方案</p>
 <p>在windows上直接用firefox测试，基本把登录、下单的测试代码弄出来了（下面是部分测试实例）：</p>
@@ -260,7 +260,7 @@ Out[55]:
 
 confirm[1].click()
 </code></pre><p>但是存在一个问题，无法指定撤单，只能先撤最新的单：</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/orders.png" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/53010563.jpg" alt=""></p>
 <p>问题存在的原因主要是splinter不支持根据class找元素，而我那时候还没搞懂xpath，结果就放弃了基于splinter的代码（实际上只要用xpath，没有任何元素是找不到的）</p>
 <p>我的splinter的初步方案是使用click_link_by_text(“撤单”)来做撤单，但是这个就无法撤前面的单，只能撤了最新的单再撤旧单。</p>
 <p>后面基于“根据class找元素”的想法，选择了selenium，这个库是splinter的底层，splinter只是简化了使用（也相当于减少了部分功能），后面不知咋的找到了xpath的资料翻了下，发现提取xpath简单到死，直接对着元素选择检查然后右键复制xpath即可，不过chrome和firefox的xpath格式不同，前者的往往是很简短的，比如：</p>

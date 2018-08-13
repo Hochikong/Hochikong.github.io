@@ -19,18 +19,18 @@
 <meta property="og:site_name" content="HOCHIKONG&#39;s WAPORIZer">
 <meta property="og:description" content="Intro本来我还是在用win7，但是越来越觉得不接收微软的安全更新简直就是要命，然后也想顺便清理下工作环境重新安装一些东西clean下，于是昨天通宵搞启动盘重装系统。装了win10 pro用Microsoft Toolkit激活了。然后安装了Docker for Windows，安装这个会自动帮我配置增加hyper-v的功能。配置完毕之后，如果你启动docker就会启用一个vswitch。这里的">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://oy30yrqej.bkt.clouddn.com/1511362113%281%29.png">
-<meta property="og:image" content="http://oy30yrqej.bkt.clouddn.com/createvswitch.png">
-<meta property="og:image" content="http://oy30yrqej.bkt.clouddn.com/networkadapter.png">
-<meta property="og:image" content="http://oy30yrqej.bkt.clouddn.com/share.png">
-<meta property="og:image" content="http://oy30yrqej.bkt.clouddn.com/vnat.png">
-<meta property="og:image" content="http://oy30yrqej.bkt.clouddn.com/icmprule.png">
-<meta property="og:image" content="http://oy30yrqej.bkt.clouddn.com/myrules.png">
-<meta property="og:updated_time" content="2017-11-22T16:20:38.799Z">
+<meta property="og:image" content="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/5311209.jpg">
+<meta property="og:image" content="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/14450408.jpg">
+<meta property="og:image" content="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/81462811.jpg">
+<meta property="og:image" content="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/14144087.jpg">
+<meta property="og:image" content="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/39926489.jpg">
+<meta property="og:image" content="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/77013435.jpg">
+<meta property="og:image" content="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/98311745.jpg">
+<meta property="og:updated_time" content="2018-08-13T13:14:43.803Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Win10 Hyper-V虚拟机折腾记录">
 <meta name="twitter:description" content="Intro本来我还是在用win7，但是越来越觉得不接收微软的安全更新简直就是要命，然后也想顺便清理下工作环境重新安装一些东西clean下，于是昨天通宵搞启动盘重装系统。装了win10 pro用Microsoft Toolkit激活了。然后安装了Docker for Windows，安装这个会自动帮我配置增加hyper-v的功能。配置完毕之后，如果你启动docker就会启用一个vswitch。这里的">
-<meta name="twitter:image" content="http://oy30yrqej.bkt.clouddn.com/1511362113%281%29.png">
+<meta name="twitter:image" content="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/5311209.jpg">
   
     <link rel="alternate" href="/atom.xml" title="HOCHIKONG&#39;s WAPORIZer" type="application/atom+xml">
   
@@ -219,19 +219,19 @@
 </ol>
 <p>下面就具体讲讲是怎么做的</p>
 <h2 id="1-创建vswitch"><a href="#1-创建vswitch" class="headerlink" title="1.创建vswitch"></a>1.创建vswitch</h2><p>打开Hyper-V管理器，选择“虚拟交换机管理器”：</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/1511362113%281%29.png" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/5311209.jpg" alt=""></p>
 <p>然后创建一个新的“内部网络”虚拟交换机，随便命名即可，我先前创的是VS NAT：</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/createvswitch.png" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/14450408.jpg" alt=""></p>
 <h2 id="2-修改网络接口"><a href="#2-修改网络接口" class="headerlink" title="2.修改网络接口"></a>2.修改网络接口</h2><p>创建完这个之后，就去控制面目板的“网络连接”选择你现在用的Internet适配器：</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/networkadapter.png" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/81462811.jpg" alt=""></p>
 <p>右键选择“属性”然后切换到“共享”的页面，允许你刚才创建的vswitch访问：</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/share.png" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/14144087.jpg" alt=""></p>
 <p>这样一来就完成了基本配置，这时候点开你创建的vswitch找IPv4属性，可以看到分配的IP地址和掩码：</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/vnat.png" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/39926489.jpg" alt=""></p>
 <h2 id="3-修改防火墙规则"><a href="#3-修改防火墙规则" class="headerlink" title="3.修改防火墙规则"></a>3.修改防火墙规则</h2><p>在做了上面的配置之后，使用你刚才创建的NAT vswitch的虚拟机都已经能上网，宿主机也能ping通虚拟机，但是虚拟机无法ping宿主，这就需要你启用下面的防火墙入站规则：</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/icmprule.png" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/77013435.jpg" alt=""></p>
 <p>然后也可以自定配置一个规则，允许来自虚拟机对宿主的任何访问：</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/myrules.png" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/98311745.jpg" alt=""></p>
 <p>配置就到此为止，虚拟机和宿主能互ping且虚拟机也能上网了</p>
 <h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://www.cnblogs.com/staneee/p/6879842.html" target="_blank" rel="external">Ping不通的解决方法</a></p>
 <p><a href="http://blog.csdn.net/rrrfff/article/details/51168376" target="_blank" rel="external">配置NAT</a></p>

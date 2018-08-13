@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>electron应用开发浅谈 | HOCHIKONG&#39;s WAPORIZer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="electron" />
+  
+  
+  
+  
+  <meta name="description" content="前言本人在学校经常会控制不住自己的手，一有空就某宝，然后经常乱花钱，搞到生活费月月光，买了iPad之后，看到iOS上有款应用叫Pennis但是要花25元才能使用，反正又不是不会写，便自己写了个带UI的应用，即MMM，Month Money Manager，并基于Apache License 2.0许可证发布，项目地址。本文重点谈谈我在写这个东西时遇到的坑和相关问题。 基本架构技术栈：bootstr">
+<meta name="keywords" content="electron">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Electron应用开发浅谈">
+<meta property="og:url" content="http://yoursite.com/2018/08/13/electronapptalk/index.html">
+<meta property="og:site_name" content="HOCHIKONG&#39;s WAPORIZer">
+<meta property="og:description" content="前言本人在学校经常会控制不住自己的手，一有空就某宝，然后经常乱花钱，搞到生活费月月光，买了iPad之后，看到iOS上有款应用叫Pennis但是要花25元才能使用，反正又不是不会写，便自己写了个带UI的应用，即MMM，Month Money Manager，并基于Apache License 2.0许可证发布，项目地址。本文重点谈谈我在写这个东西时遇到的坑和相关问题。 基本架构技术栈：bootstr">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-08-13T13:48:51.366Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Electron应用开发浅谈">
+<meta name="twitter:description" content="前言本人在学校经常会控制不住自己的手，一有空就某宝，然后经常乱花钱，搞到生活费月月光，买了iPad之后，看到iOS上有款应用叫Pennis但是要花25元才能使用，反正又不是不会写，便自己写了个带UI的应用，即MMM，Month Money Manager，并基于Apache License 2.0许可证发布，项目地址。本文重点谈谈我在写这个东西时遇到的坑和相关问题。 基本架构技术栈：bootstr">
+  
+    <link rel="alternate" href="/atom.xml" title="HOCHIKONG&#39;s WAPORIZer" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/vapor3.jpg">
+  <link rel="apple-touch-icon" href="/css/images/vapor3.jpg">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/9749f0/00000000000000000001008f/27/l?subset_id=2&fvd=n5) format("woff2");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/90cf9f/000000000000000000010091/27/l?subset_id=2&fvd=n7) format("woff2");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/8a5494/000000000000000000013365/27/l?subset_id=2&fvd=n4) format("woff2");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/d337d8/000000000000000000010095/27/l?subset_id=2&fvd=i4) format("woff2");font-weight:400;font-style:italic;}</style>
+  <link rel="stylesheet" href="/css/style.css">
+
+  <script src="/js/jquery-3.1.1.min.js"></script>
+  <script src="/js/bootstrap.js"></script>
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    <link rel="stylesheet" href="/css/dialog.css">
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+    <link rel="stylesheet" href="/css/vdonate.css" >
+  
+
+</head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="
+                 margin-top: 0px;"  
+                href="#" data-toggle="modal" data-target="#myModal" >
+                  <img width="124px" height="124px" alt="Hike News" src="/css/images/vapor3.jpg">
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">首页</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">归档</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">分类</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">标签</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">关于</a> </li>
+                
+                  <li> <a class="main-nav-link" href="https://ckho.top">Service</a> </li>
+                
+                  <li> <a class="main-nav-link" href="http://h2q.weebly.com">Works</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="请输入关键词..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(无标题)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-electronapptalk" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      Electron应用开发浅谈
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2018/08/13/electronapptalk/" class="article-date">
+	  <time datetime="2018-08-13T09:09:09.000Z" itemprop="datePublished">2018-08-13</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/随笔/">随笔</a>
+
+      
+	<a class="article-views">
+	<span id="busuanzi_container_page_pv">
+		阅读量<span id="busuanzi_value_page_pv"></span>
+	</span>
+	</a>
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>本人在学校经常会控制不住自己的手，一有空就某宝，然后经常乱花钱，搞到生活费月月光，买了iPad之后，看到iOS上有款应用叫Pennis但是要花25元才能使用，反正又不是不会写，便自己写了个带UI的应用，即MMM，Month Money Manager，并基于Apache License 2.0许可证发布，<a href="https://github.com/Hochikong/MonthMoneyManager" target="_blank" rel="external">项目地址</a>。本文重点谈谈我在写这个东西时遇到的坑和相关问题。</p>
+<h2 id="基本架构"><a href="#基本架构" class="headerlink" title="基本架构"></a>基本架构</h2><p>技术栈：bootstrap、vue.js、electron</p>
+<p>辅助工具：<a href="https://www.layoutit.com/" target="_blank" rel="external">layoutit</a>，electron-forge</p>
+<p>目录结构参考我的Github repo</p>
+<p>下面简单讲讲数据的处理流程：</p>
+<p>1.每次应用一打开，就会通过nodejs的fs模块检测用户数据文件是否存在，是则读取文件并设置两个属性：exists和data，前者表示用户数据是否存在，后者是数据的具体内容（一个JS Object），当exists为false的时候，通过函数生成一个带初始值的object，否则使用用户数据文件里的源数据object，同时main.js会在特定频道监听来自渲染端的请求：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line">ipcMain.on(<span class="string">'RTOM'</span>, (event, arg) =&gt; &#123;</div><div class="line">    <span class="keyword">switch</span> (arg.head) &#123;</div><div class="line">        <span class="comment">// renderer query current cache every loading time, send a empty body</span></div><div class="line">        <span class="keyword">case</span> <span class="string">'query'</span>: &#123;</div><div class="line">            event.sender.send(<span class="string">'MTOR'</span>, &#123;</div><div class="line">                exists: userDataExists,</div><div class="line">                data: userDataCache,</div><div class="line">            &#125;);</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">case</span> <span class="string">'update'</span>: &#123;</div><div class="line">            updateUserData(arg.body);</div><div class="line">            updateCache();</div><div class="line">            event.sender.send(<span class="string">'MTORUpdateView'</span>, &#123;</div><div class="line">                exists: userDataExists,</div><div class="line">                data: arg.body,</div><div class="line">            &#125;);</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">default</span>:</div><div class="line">        <span class="comment">// empty</span></div><div class="line">    &#125;</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>在主进程里主要是靠ipcMain来收发信息，在RTOM上监听渲染端的数据，数据是一个JS object，当数据头部为query的时候，则把前面读取的文件是否存在和数据object发过去，ipcMain通过event.sender.send() 函数发送数据，并且可以指定频道，这里我用的是MTOR。同时ipcMain也要负责监听来自渲染端的更新请求，然后将渲染端发来的数据object写入本地文件，然后把那些数据通过MTORUpdateView频道再发回渲染端用于更新用户界面。上面的代码均为异步消息。</p>
+<p>2.应用首先加载index.html，index.html先通过queryCache() 函数向main.js发送请求，发送请求后进行监听直到获取数据后才初始化创建vue实例：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div></pre></td><td class="code"><pre><div class="line">queryCache();</div><div class="line"></div><div class="line">    ipcRenderer.on(<span class="string">'MTOR'</span>, (event, arg) =&gt; &#123;</div><div class="line">        <span class="keyword">if</span> (arg.exists) &#123;</div><div class="line">            vueData.exists = <span class="literal">true</span>;</div><div class="line">            vueData.userCache = arg.data;</div><div class="line">            initalWork();</div><div class="line">            <span class="keyword">if</span> (<span class="keyword">typeof</span> vueData.userCache === <span class="string">'object'</span>) &#123;</div><div class="line">                <span class="keyword">const</span> vm0 = <span class="keyword">new</span> Vue(&#123;</div><div class="line">                    el: <span class="string">"#indexView"</span>,</div><div class="line">                    data: vueData,</div><div class="line">                    computed: &#123;</div><div class="line">                        imgUrl: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</div><div class="line">                            <span class="keyword">return</span> vueData.needTips ? <span class="string">'./localimg/arrow.png'</span> : <span class="string">" "</span>;</div><div class="line">                        &#125;</div><div class="line">                    &#125;,</div><div class="line">                    methods: &#123;</div><div class="line">                        appendDayCost: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</div><div class="line">                            applyCostExec();</div><div class="line">                            alert(<span class="string">"已追加"</span>);</div><div class="line">                        &#125;,</div><div class="line">                        fixRemain: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</div><div class="line">                            fixRemainExec();</div><div class="line">                            alert(<span class="string">"已修正"</span>);</div><div class="line">                        &#125;</div><div class="line">                    &#125;</div><div class="line">                &#125;);</div><div class="line">            &#125;</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            vueData.exists = <span class="literal">false</span>;</div><div class="line">            vueData.userCache = arg.data;</div><div class="line">            alert(emptyData);</div><div class="line">            <span class="keyword">const</span> allBtn = <span class="built_in">document</span>.getElementsByClassName(<span class="string">'btnBlock'</span>);</div><div class="line">            <span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; allBtn.length; i++) &#123;</div><div class="line">                allBtn[i].setAttribute(<span class="string">'disabled'</span>, <span class="string">'disabled'</span>);</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">const</span> vmfake = <span class="keyword">new</span> Vue(&#123;</div><div class="line">                el: <span class="string">"#indexView"</span>,</div><div class="line">                data: vueData,</div><div class="line">                computed: &#123;</div><div class="line">                    imgUrl: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</div><div class="line">                        <span class="keyword">return</span> vueData.needTips ? <span class="string">'./localimg/arrow.png'</span> : <span class="string">" "</span>;</div><div class="line">                    &#125;</div><div class="line">                &#125;,</div><div class="line">                methods: &#123;</div><div class="line">                    appendDayCost: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</div><div class="line">                        <span class="comment">// do nothing</span></div><div class="line">                    &#125;,</div><div class="line">                    fixRemain: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</div><div class="line">                        <span class="comment">// do nothing</span></div><div class="line">                    &#125;</div><div class="line">                &#125;</div><div class="line">            &#125;);</div><div class="line">        &#125;</div><div class="line">    &#125;);</div></pre></td></tr></table></figure>
+<p>要分析上面的代码，先从queryCache开始看：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">queryCache</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="comment">// 发送请求查询cache，不能直接用sendSync，ipcMain需要设置event.returnValue</span></div><div class="line">        ipcRenderer.send(<span class="string">'RTOM'</span>, generateCommu(<span class="string">'query'</span>));</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>ipcRenderer负责为渲染进程收发信息，ipcRenderer发送信息有两种方式：异步和同步，异步用send，同步用sendSync，但是要注意，sendSync发送的数据，ipcMain只有在设置了event.returnValue的值的时候才会响应听同步消息，不设置的话就是渲染页面无法正常显示。</p>
+<p>当ipcRenderer接受到来自ipcMain的query应答，就检查数据中的exists为true还是false，若为true，则执行initialWork() ，initialWork的代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">initalWork</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="keyword">const</span> cacheMeta = vueData.userCache.meta;</div><div class="line">        <span class="keyword">if</span> (cacheMeta.recordYear === TODAY.year &amp;&amp; cacheMeta.recordMonth === TODAY.month) &#123;</div><div class="line">            <span class="keyword">if</span> (cacheMeta.recordDay &lt; TODAY.day) &#123;</div><div class="line">                <span class="comment">// 此处满足同年同月但不同日且今天比记录日后</span></div><div class="line">                updateCache(vueData.userCache);</div><div class="line">                writeCache();</div><div class="line">                cacheTOVueData();</div><div class="line">                dontNeedTips();</div><div class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (cacheMeta.recordDay === TODAY.day) &#123;</div><div class="line">                cacheTOVueData();</div><div class="line">                dontNeedTips();</div><div class="line">            &#125; <span class="keyword">else</span> &#123;</div><div class="line">                alert(outOfDate);</div><div class="line">            &#125;</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            alert(outOfDate);</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>对main.js返回的文件内容进行检查，若同年同月且此刻是记录日期的第二天，则将部分用户数据重新计算并通过writeCache() 函数发送update消息到ipcMain，将数据写回本地，然后把数据更新到先前创建（在queryCache函数执行前）的vueData中，这样就向用户展示来自数据文件的数值：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">let</span> vueData = &#123;</div><div class="line">        <span class="comment">// 基本属性</span></div><div class="line">        exists: <span class="literal">false</span>,</div><div class="line">        userCache: &#123;<span class="attr">name</span>: <span class="string">'jack'</span>&#125;,</div><div class="line">        needTips: <span class="literal">true</span>,  <span class="comment">// 判断要不要提醒用户设置预算</span></div><div class="line">        <span class="comment">// ----交换属性----</span></div><div class="line">        newTotal: <span class="number">0</span>,  <span class="comment">// 覆盖原来的total，最终同步到userCache</span></div><div class="line">        addCost: <span class="number">0</span>,  <span class="comment">// 每次输入的额，要加到todayCost</span></div><div class="line">        <span class="comment">// 使用计算属性 todayCredit</span></div><div class="line">        <span class="comment">// ----被动属性----</span></div><div class="line">        deposit: <span class="number">0</span>,</div><div class="line">        todayCredit: <span class="number">0</span>,</div><div class="line">        alCond: <span class="string">'alert-success'</span>,</div><div class="line">        cacheRemain: <span class="number">0</span>,  <span class="comment">// 从userCache获取</span></div><div class="line">        remain_days: <span class="number">0</span>,  <span class="comment">// 从userCache获取</span></div><div class="line">        al: <span class="string">'alert'</span>,</div><div class="line">        alDis: <span class="string">'alert-dismissable'</span>,</div><div class="line">    &#125;;</div></pre></td></tr></table></figure>
+<p>当用户执行追加本日开支和余额修正时，程序分别通过applyCostExec() 和 fixRemain() 进行操作：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">applyCostExec</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        vueData.userCache.user.dayCost += <span class="built_in">parseFloat</span>(vueData.addCost);</div><div class="line">        writeCache();</div><div class="line">        vueData.addCost = <span class="number">0</span>;</div><div class="line">        ipcRenderer.on(<span class="string">'MTORUpdateView'</span>, (event, arg) =&gt; &#123;</div><div class="line">            vueData.exists = arg.exists;</div><div class="line">            vueData.userCache = arg.data;</div><div class="line">            initalWork();</div><div class="line">        &#125;);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">function</span> <span class="title">fixRemainExec</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        vueData.userCache.user.total = vueData.newTotal;</div><div class="line">        vueData.userCache.user.remain = vueData.newTotal - vueData.userCache.user.deposit;</div><div class="line">        vueData.userCache.user.dayAverage = vueData.userCache.user.remain / vueData.userCache.user.daysRemain;</div><div class="line">        writeCache();</div><div class="line">        vueData.newTotal = <span class="number">0</span>;</div><div class="line">        ipcRenderer.on(<span class="string">'MTORUpdateView'</span>, (event, arg) =&gt; &#123;</div><div class="line">            vueData.exists = arg.exists;</div><div class="line">            vueData.userCache = arg.data;</div><div class="line">            initalWork();</div><div class="line">        &#125;);</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>以applyCostExec为例，首先把vueData中v-model的绑定的变量的值同步到userCache中，然后调用writeCache() 写入本地文件，重设v-model对应变量的值为0，然后监听来自ipcMain的数据并再次执行initialWork() ，重复index.html刚加载的时候的界面初始化流程，使用vue来更新用户界面主要是靠双向绑定减少重复工作，若使用jQuery实现同样的功能，代码量将会显著增加，而fixRemain的流程和applyCostExec也基本一致。</p>
+<p>回到前面的分析，若main.js在index.html初始化的时候返回给index.html的数据中exists为false，则通过alert提醒用户未设置预算计划，同时通过vue的计算属性在用户界面展示一个箭头提醒用户设置计划。同时通过setAttribute禁用主界面的特定按钮，直到用户设置好计划为止。</p>
+<p>至于config.html的逻辑则简单得多，只需要处理用户保存变更和查看about和help的动作就行了。js代码的结构与index.html差不多，一个vue数据对象负责双向绑定，当用户保存变更的时候就读取数据对象的值构造一个object发送给main.js保存在本地文件，然后用户点击“返回”的时候就让index.html执行前面介绍的流程，更新用户界面等。</p>
+<h2 id="遇上的坑和关注点"><a href="#遇上的坑和关注点" class="headerlink" title="遇上的坑和关注点"></a>遇上的坑和关注点</h2><ol>
+<li><p>异步通讯，根据前面描述的逻辑，vue负责更新用户界面，但是前提是本地文件储存的数据要先更新到vueData中。如果创建vue实例的代码在和ipcRenderer监听的代码处于同一命名空间的话，就会导致渲染网页的时候vue获取不了来自异步通讯的数据而是直接读取页面初始化时生成的vueData，从而报错导致页面刷不出来，而且这个阶段只有开发环境版的vue.js能提醒问题出在什么地方。建议在开发阶段使用vue的开发环境版本，并且开启devtools用于调试。vue实例必须在异步数据到达之后才创建，不然会报错。或者使用同步通讯，但是要注意ipcMain的returnValue的设置。</p>
+</li>
+<li><p>生成的程序，窗口标题由不同html的title决定，而对话框的标题，由package.json的productName决定。</p>
+</li>
+<li><p>建议使用electron-forge初始化一个新的electron项目，免去手动配置boilerplate。</p>
+</li>
+<li><p>electron-forge的图标设定不会在编译前起效，即你执行electron-forge start的时候，你设置的icon是不会显示的，因为icon的设置是在程序打包的时候才设置的，所以要看到图标的效果只能make完再查看。</p>
+</li>
+<li><p>Apache License的使用，除了在根目录放LICENSE（通常能通过github直接创建），还要在源码的头部放上一份包含自己信息的声明：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">Copyright [yyyy] [name of copyright owner]</div><div class="line"> Licensed under the Apache License, Version 2.0 (the "License");</div><div class="line"> you may not use this file except in compliance with the License.</div><div class="line"> You may obtain a copy of the License at</div><div class="line"></div><div class="line"> http://www.apache.org/licenses/LICENSE-2.0</div><div class="line"></div><div class="line"> Unless required by applicable law or agreed to in writing, software</div><div class="line"> distributed under the License is distributed on an "AS IS" BASIS,</div><div class="line"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</div><div class="line"> See the License for the specific language governing permissions and</div><div class="line"> limitations under the License.</div></pre></td></tr></table></figure>
+<p>方括号内的内容由自己填写，不保留方括号。关于Apache License的使用可以参考这个：<a href="http://adoyle.me/blog/how-to-apply-the-apache-2-0-license-to-your-project.html" target="_blank" rel="external">教程</a></p>
+<p>如果包含第三方库，我参考了Apache Spark项目的做法，在LICENSE后追加说明：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">------------------------------------------------------------------------------------</div><div class="line">   This product bundles various third-party components under other open source licenses.</div><div class="line">   This section summarizes those components and their licenses. See licenses/</div><div class="line">   for text of these licenses.</div><div class="line"></div><div class="line"></div><div class="line">   MIT License</div><div class="line">   -----------</div><div class="line"></div><div class="line">   local-lib/bootstrap.min.css</div><div class="line">   local-lib/bootstrap.min.js</div><div class="line">   local-lib/jquery.slim.min.js</div><div class="line">   local-lib/popper.min.js</div><div class="line">   local-lib/vue.js</div></pre></td></tr></table></figure>
+<p>然后在根目录创建一个licenses目录，里面放上对应项目的license原文，并且根目录的NOTICE也要加上相关说明：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">Month Money Manager</div><div class="line">Copyright 2018 Hochikong</div><div class="line"></div><div class="line">Bootstrap</div><div class="line">Copyright (c) 2011-2018 Twitter, Inc.</div><div class="line">Copyright (c) 2011-2018 The Bootstrap Authors</div><div class="line"></div><div class="line">jQuery</div><div class="line">Copyright JS Foundation and other contributors, https://js.foundation/</div><div class="line"></div><div class="line">popper.js</div><div class="line">Copyright © 2016 Federico Zivolo and contributors</div><div class="line"></div><div class="line">Vue.js</div><div class="line">Copyright (c) 2013-present, Yuxi (Evan) You</div></pre></td></tr></table></figure>
+<p>其他人的实践例子：<a href="https://softwareengineering.stackexchange.com/questions/234511/what-is-the-best-practice-for-arranging-third-party-library-licenses-paperwork" target="_blank" rel="external">链接</a></p>
+</li>
+<li><p>建议直接用npm处理问题，比如npm install安装依赖，npm run make编译，虽然实际上调用的是electron-forge make。npm install途中可能会报错，删掉node_modules再重试几遍会比较好。</p>
+</li>
+<li><p>bootstrap的部分界面特效（比如弹窗）无法在electron app中使用。</p>
+</li>
+</ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Electron+Vue+Bootstrap的GUI应用开发难度应该是比Qt等库更加简单，而且具备跨平台的能力，如果熟悉了Electron中的套路，开发第二第三个electron app应该就更容易了。最重要还是要熟悉node.js那些操作，才能实现和本地软件的交互。</p>
+<p>在此特别感谢<a href="https://www.jianshu.com/u/a7454e40399d" target="_blank" rel="external">鳗驼螺</a> ，他的这篇文章算是个非常经典的electron app开发教程，无论是上下文菜单还是窗口菜单、对话框等，都有详细的介绍，感谢他的贡献，我才能顺利开发这个electron 应用。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        <div id="donation_div"></div>
+
+<script src="/js/vdonate.js"></script>
+<script>
+var a = new Donate({
+  title: '如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作!', // 可选参数，打赏标题
+  btnText: '打赏支持', // 可选参数，打赏按钮文字
+  el: document.getElementById('donation_div'),
+  wechatImage: 'http://oy30yrqej.bkt.clouddn.com/we.jpg',
+  alipayImage: 'http://oy30yrqej.bkt.clouddn.com/ali.jpg'
+});
+</script>
+      
+      
+        
+	<div id="comment">
+		<!-- 来必力City版安装代码 -->
+		<div id="lv-container" data-id="city" data-uid="MTAyMC8zMTQzNy84MDAx">
+		<script type="text/javascript">
+		   (function(d, s) {
+		       var j, e = d.getElementsByTagName(s)[0];
+
+		       if (typeof LivereTower === 'function') { return; }
+
+		       j = d.createElement(s);
+		       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+		       j.async = true;
+
+		       e.parentNode.insertBefore(j, e);
+		   })(document, 'script');
+		</script>
+		<noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+		</div>
+		<!-- City版安装代码已完成 -->
+	</div>
+
+
+
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/electron/">electron</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2018/06/13/productiveipad2018/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">如何让iPad变成真正的生产力工具</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本架构"><span class="nav-number">2.</span> <span class="nav-text">基本架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#遇上的坑和关注点"><span class="nav-number">3.</span> <span class="nav-text">遇上的坑和关注点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol>
+    
+    </div>
+  </aside>
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2017 - 2018 HOCHIKONG&#39;s WAPORIZer All Rights Reserved.</p>
+	      
+	      
+    		<p class="busuanzi_uv">
+				访客数 : <span id="busuanzi_value_site_uv"></span> |  
+				访问量 : <span id="busuanzi_value_site_pv"></span>
+		    </p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+    <a href="https://ckho.top" class="mobile-nav-link">Service</a>
+  
+    <a href="http://h2q.weebly.com" class="mobile-nav-link">Works</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+  <script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+	<div style="display: none;">
+    <script src="https://s95.cnzz.com/z_stat.php?id=1260716016&web_id=1260716016" language="JavaScript"></script>
+  </div>
+
+
+
+	<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+	</script>
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            HOCHIKONG&#39;s WAPORIZer
+          </div>
+          <div class="panel-body">
+            Copyright © 2018 Hochikong All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>

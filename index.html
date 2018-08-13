@@ -296,6 +296,97 @@
         
           <section id="main" style="float:none;">
   
+    <article id="post-electronapptalk"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2018/08/13/electronapptalk/">Electron应用开发浅谈</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2018/08/13/electronapptalk/" class="article-date">
+	  <time datetime="2018-08-13T09:09:09.000Z" itemprop="datePublished">2018-08-13</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/随笔/">随笔</a>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>本人在学校经常会控制不住自己的手，一有空就某宝，然后经常乱花钱，搞到生活费月月光，买了iPad之后，看到iOS上有款应用叫Pennis但是要花25元才能使用，反正又不是不会写，便自己写了个带UI的应用，即MMM，Month Money Manager，并基于Apache License 2.0许可证发布，<a href="https://github.com/Hochikong/MonthMoneyManager" target="_blank" rel="external">项目地址</a>。本文重点谈谈我在写这个东西时遇到的坑和相关问题。</p>
+<h2 id="基本架构"><a href="#基本架构" class="headerlink" title="基本架构"></a>基本架构</h2><p>技术栈：bootstrap、vue.js、electron</p>
+<p>辅助工具：<a href="https://www.layoutit.com/" target="_blank" rel="external">layoutit</a>，electron-forge</p>
+<p>目录结构参考我的Github repo</p>
+<p>下面简单讲讲数据的处理流程：</p>
+<p>1.每次应用一打开，就会通过nodejs的fs模块检测用户数据文件是否存在，是则读取文件并设置两个属性：exists和data，前者表示用户数据是否存在，后者是数据的具体内容（一个JS Object），当exists为false的时候，通过函数生成一个带初始值的object，否则使用用户数据文件里的源数据object，同时main.js会在特定频道监听来自渲染端的请求：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line">ipcMain.on(<span class="string">'RTOM'</span>, (event, arg) =&gt; &#123;</div><div class="line">    <span class="keyword">switch</span> (arg.head) &#123;</div><div class="line">        <span class="comment">// renderer query current cache every loading time, send a empty body</span></div><div class="line">        <span class="keyword">case</span> <span class="string">'query'</span>: &#123;</div><div class="line">            event.sender.send(<span class="string">'MTOR'</span>, &#123;</div><div class="line">                exists: userDataExists,</div><div class="line">                data: userDataCache,</div><div class="line">            &#125;);</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">case</span> <span class="string">'update'</span>: &#123;</div><div class="line">            updateUserData(arg.body);</div><div class="line">            updateCache();</div><div class="line">            event.sender.send(<span class="string">'MTORUpdateView'</span>, &#123;</div><div class="line">                exists: userDataExists,</div><div class="line">                data: arg.body,</div><div class="line">            &#125;);</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">default</span>:</div><div class="line">        <span class="comment">// empty</span></div><div class="line">    &#125;</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>在主进程里主要是靠ipcMain来收发信息，在RTOM上监听渲染端的数据，数据是一个JS object，当数据头部为query的时候，则把前面读取的文件是否存在和数据object发过去，ipcMain通过event.sender.send() 函数发送数据，并且可以指定频道，这里我用的是MTOR。同时ipcMain也要负责监听来自渲染端的更新请求，然后将渲染端发来的数据object写入本地文件，然后把那些数据通过MTORUpdateView频道再发回渲染端用于更新用户界面。上面的代码均为异步消息。</p>
+<p>2.应用首先加载index.html，index.html先通过queryCache() 函数向main.js发送请求，发送请求后进行监听直到获取数据后才初始化创建vue实例：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div></pre></td><td class="code"><pre><div class="line">queryCache();</div><div class="line"></div><div class="line">    ipcRenderer.on(<span class="string">'MTOR'</span>, (event, arg) =&gt; &#123;</div><div class="line">        <span class="keyword">if</span> (arg.exists) &#123;</div><div class="line">            vueData.exists = <span class="literal">true</span>;</div><div class="line">            vueData.userCache = arg.data;</div><div class="line">            initalWork();</div><div class="line">            <span class="keyword">if</span> (<span class="keyword">typeof</span> vueData.userCache === <span class="string">'object'</span>) &#123;</div><div class="line">                <span class="keyword">const</span> vm0 = <span class="keyword">new</span> Vue(&#123;</div><div class="line">                    el: <span class="string">"#indexView"</span>,</div><div class="line">                    data: vueData,</div><div class="line">                    computed: &#123;</div><div class="line">                        imgUrl: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</div><div class="line">                            <span class="keyword">return</span> vueData.needTips ? <span class="string">'./localimg/arrow.png'</span> : <span class="string">" "</span>;</div><div class="line">                        &#125;</div><div class="line">                    &#125;,</div><div class="line">                    methods: &#123;</div><div class="line">                        appendDayCost: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</div><div class="line">                            applyCostExec();</div><div class="line">                            alert(<span class="string">"已追加"</span>);</div><div class="line">                        &#125;,</div><div class="line">                        fixRemain: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</div><div class="line">                            fixRemainExec();</div><div class="line">                            alert(<span class="string">"已修正"</span>);</div><div class="line">                        &#125;</div><div class="line">                    &#125;</div><div class="line">                &#125;);</div><div class="line">            &#125;</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            vueData.exists = <span class="literal">false</span>;</div><div class="line">            vueData.userCache = arg.data;</div><div class="line">            alert(emptyData);</div><div class="line">            <span class="keyword">const</span> allBtn = <span class="built_in">document</span>.getElementsByClassName(<span class="string">'btnBlock'</span>);</div><div class="line">            <span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; allBtn.length; i++) &#123;</div><div class="line">                allBtn[i].setAttribute(<span class="string">'disabled'</span>, <span class="string">'disabled'</span>);</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">const</span> vmfake = <span class="keyword">new</span> Vue(&#123;</div><div class="line">                el: <span class="string">"#indexView"</span>,</div><div class="line">                data: vueData,</div><div class="line">                computed: &#123;</div><div class="line">                    imgUrl: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</div><div class="line">                        <span class="keyword">return</span> vueData.needTips ? <span class="string">'./localimg/arrow.png'</span> : <span class="string">" "</span>;</div><div class="line">                    &#125;</div><div class="line">                &#125;,</div><div class="line">                methods: &#123;</div><div class="line">                    appendDayCost: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</div><div class="line">                        <span class="comment">// do nothing</span></div><div class="line">                    &#125;,</div><div class="line">                    fixRemain: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</div><div class="line">                        <span class="comment">// do nothing</span></div><div class="line">                    &#125;</div><div class="line">                &#125;</div><div class="line">            &#125;);</div><div class="line">        &#125;</div><div class="line">    &#125;);</div></pre></td></tr></table></figure>
+<p>要分析上面的代码，先从queryCache开始看：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">queryCache</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="comment">// 发送请求查询cache，不能直接用sendSync，ipcMain需要设置event.returnValue</span></div><div class="line">        ipcRenderer.send(<span class="string">'RTOM'</span>, generateCommu(<span class="string">'query'</span>));</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>ipcRenderer负责为渲染进程收发信息，ipcRenderer发送信息有两种方式：异步和同步，异步用send，同步用sendSync，但是要注意，sendSync发送的数据，ipcMain只有在设置了event.returnValue的值的时候才会响应听同步消息，不设置的话就是渲染页面无法正常显示。</p>
+<p>当ipcRenderer接受到来自ipcMain的query应答，就检查数据中的exists为true还是false，若为true，则执行initialWork() ，initialWork的代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">initalWork</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="keyword">const</span> cacheMeta = vueData.userCache.meta;</div><div class="line">        <span class="keyword">if</span> (cacheMeta.recordYear === TODAY.year &amp;&amp; cacheMeta.recordMonth === TODAY.month) &#123;</div><div class="line">            <span class="keyword">if</span> (cacheMeta.recordDay &lt; TODAY.day) &#123;</div><div class="line">                <span class="comment">// 此处满足同年同月但不同日且今天比记录日后</span></div><div class="line">                updateCache(vueData.userCache);</div><div class="line">                writeCache();</div><div class="line">                cacheTOVueData();</div><div class="line">                dontNeedTips();</div><div class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (cacheMeta.recordDay === TODAY.day) &#123;</div><div class="line">                cacheTOVueData();</div><div class="line">                dontNeedTips();</div><div class="line">            &#125; <span class="keyword">else</span> &#123;</div><div class="line">                alert(outOfDate);</div><div class="line">            &#125;</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            alert(outOfDate);</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>对main.js返回的文件内容进行检查，若同年同月且此刻是记录日期的第二天，则将部分用户数据重新计算并通过writeCache() 函数发送update消息到ipcMain，将数据写回本地，然后把数据更新到先前创建（在queryCache函数执行前）的vueData中，这样就向用户展示来自数据文件的数值：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">let</span> vueData = &#123;</div><div class="line">        <span class="comment">// 基本属性</span></div><div class="line">        exists: <span class="literal">false</span>,</div><div class="line">        userCache: &#123;<span class="attr">name</span>: <span class="string">'jack'</span>&#125;,</div><div class="line">        needTips: <span class="literal">true</span>,  <span class="comment">// 判断要不要提醒用户设置预算</span></div><div class="line">        <span class="comment">// ----交换属性----</span></div><div class="line">        newTotal: <span class="number">0</span>,  <span class="comment">// 覆盖原来的total，最终同步到userCache</span></div><div class="line">        addCost: <span class="number">0</span>,  <span class="comment">// 每次输入的额，要加到todayCost</span></div><div class="line">        <span class="comment">// 使用计算属性 todayCredit</span></div><div class="line">        <span class="comment">// ----被动属性----</span></div><div class="line">        deposit: <span class="number">0</span>,</div><div class="line">        todayCredit: <span class="number">0</span>,</div><div class="line">        alCond: <span class="string">'alert-success'</span>,</div><div class="line">        cacheRemain: <span class="number">0</span>,  <span class="comment">// 从userCache获取</span></div><div class="line">        remain_days: <span class="number">0</span>,  <span class="comment">// 从userCache获取</span></div><div class="line">        al: <span class="string">'alert'</span>,</div><div class="line">        alDis: <span class="string">'alert-dismissable'</span>,</div><div class="line">    &#125;;</div></pre></td></tr></table></figure>
+<p>当用户执行追加本日开支和余额修正时，程序分别通过applyCostExec() 和 fixRemain() 进行操作：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">applyCostExec</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        vueData.userCache.user.dayCost += <span class="built_in">parseFloat</span>(vueData.addCost);</div><div class="line">        writeCache();</div><div class="line">        vueData.addCost = <span class="number">0</span>;</div><div class="line">        ipcRenderer.on(<span class="string">'MTORUpdateView'</span>, (event, arg) =&gt; &#123;</div><div class="line">            vueData.exists = arg.exists;</div><div class="line">            vueData.userCache = arg.data;</div><div class="line">            initalWork();</div><div class="line">        &#125;);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">function</span> <span class="title">fixRemainExec</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        vueData.userCache.user.total = vueData.newTotal;</div><div class="line">        vueData.userCache.user.remain = vueData.newTotal - vueData.userCache.user.deposit;</div><div class="line">        vueData.userCache.user.dayAverage = vueData.userCache.user.remain / vueData.userCache.user.daysRemain;</div><div class="line">        writeCache();</div><div class="line">        vueData.newTotal = <span class="number">0</span>;</div><div class="line">        ipcRenderer.on(<span class="string">'MTORUpdateView'</span>, (event, arg) =&gt; &#123;</div><div class="line">            vueData.exists = arg.exists;</div><div class="line">            vueData.userCache = arg.data;</div><div class="line">            initalWork();</div><div class="line">        &#125;);</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>以applyCostExec为例，首先把vueData中v-model的绑定的变量的值同步到userCache中，然后调用writeCache() 写入本地文件，重设v-model对应变量的值为0，然后监听来自ipcMain的数据并再次执行initialWork() ，重复index.html刚加载的时候的界面初始化流程，使用vue来更新用户界面主要是靠双向绑定减少重复工作，若使用jQuery实现同样的功能，代码量将会显著增加，而fixRemain的流程和applyCostExec也基本一致。</p>
+<p>回到前面的分析，若main.js在index.html初始化的时候返回给index.html的数据中exists为false，则通过alert提醒用户未设置预算计划，同时通过vue的计算属性在用户界面展示一个箭头提醒用户设置计划。同时通过setAttribute禁用主界面的特定按钮，直到用户设置好计划为止。</p>
+<p>至于config.html的逻辑则简单得多，只需要处理用户保存变更和查看about和help的动作就行了。js代码的结构与index.html差不多，一个vue数据对象负责双向绑定，当用户保存变更的时候就读取数据对象的值构造一个object发送给main.js保存在本地文件，然后用户点击“返回”的时候就让index.html执行前面介绍的流程，更新用户界面等。</p>
+<h2 id="遇上的坑和关注点"><a href="#遇上的坑和关注点" class="headerlink" title="遇上的坑和关注点"></a>遇上的坑和关注点</h2><ol>
+<li><p>异步通讯，根据前面描述的逻辑，vue负责更新用户界面，但是前提是本地文件储存的数据要先更新到vueData中。如果创建vue实例的代码在和ipcRenderer监听的代码处于同一命名空间的话，就会导致渲染网页的时候vue获取不了来自异步通讯的数据而是直接读取页面初始化时生成的vueData，从而报错导致页面刷不出来，而且这个阶段只有开发环境版的vue.js能提醒问题出在什么地方。建议在开发阶段使用vue的开发环境版本，并且开启devtools用于调试。vue实例必须在异步数据到达之后才创建，不然会报错。或者使用同步通讯，但是要注意ipcMain的returnValue的设置。</p>
+</li>
+<li><p>生成的程序，窗口标题由不同html的title决定，而对话框的标题，由package.json的productName决定。</p>
+</li>
+<li><p>建议使用electron-forge初始化一个新的electron项目，免去手动配置boilerplate。</p>
+</li>
+<li><p>electron-forge的图标设定不会在编译前起效，即你执行electron-forge start的时候，你设置的icon是不会显示的，因为icon的设置是在程序打包的时候才设置的，所以要看到图标的效果只能make完再查看。</p>
+</li>
+<li><p>Apache License的使用，除了在根目录放LICENSE（通常能通过github直接创建），还要在源码的头部放上一份包含自己信息的声明：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">Copyright [yyyy] [name of copyright owner]</div><div class="line"> Licensed under the Apache License, Version 2.0 (the "License");</div><div class="line"> you may not use this file except in compliance with the License.</div><div class="line"> You may obtain a copy of the License at</div><div class="line"></div><div class="line"> http://www.apache.org/licenses/LICENSE-2.0</div><div class="line"></div><div class="line"> Unless required by applicable law or agreed to in writing, software</div><div class="line"> distributed under the License is distributed on an "AS IS" BASIS,</div><div class="line"> WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</div><div class="line"> See the License for the specific language governing permissions and</div><div class="line"> limitations under the License.</div></pre></td></tr></table></figure>
+<p>方括号内的内容由自己填写，不保留方括号。关于Apache License的使用可以参考这个：<a href="http://adoyle.me/blog/how-to-apply-the-apache-2-0-license-to-your-project.html" target="_blank" rel="external">教程</a></p>
+<p>如果包含第三方库，我参考了Apache Spark项目的做法，在LICENSE后追加说明：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">------------------------------------------------------------------------------------</div><div class="line">   This product bundles various third-party components under other open source licenses.</div><div class="line">   This section summarizes those components and their licenses. See licenses/</div><div class="line">   for text of these licenses.</div><div class="line"></div><div class="line"></div><div class="line">   MIT License</div><div class="line">   -----------</div><div class="line"></div><div class="line">   local-lib/bootstrap.min.css</div><div class="line">   local-lib/bootstrap.min.js</div><div class="line">   local-lib/jquery.slim.min.js</div><div class="line">   local-lib/popper.min.js</div><div class="line">   local-lib/vue.js</div></pre></td></tr></table></figure>
+<p>然后在根目录创建一个licenses目录，里面放上对应项目的license原文，并且根目录的NOTICE也要加上相关说明：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">Month Money Manager</div><div class="line">Copyright 2018 Hochikong</div><div class="line"></div><div class="line">Bootstrap</div><div class="line">Copyright (c) 2011-2018 Twitter, Inc.</div><div class="line">Copyright (c) 2011-2018 The Bootstrap Authors</div><div class="line"></div><div class="line">jQuery</div><div class="line">Copyright JS Foundation and other contributors, https://js.foundation/</div><div class="line"></div><div class="line">popper.js</div><div class="line">Copyright © 2016 Federico Zivolo and contributors</div><div class="line"></div><div class="line">Vue.js</div><div class="line">Copyright (c) 2013-present, Yuxi (Evan) You</div></pre></td></tr></table></figure>
+<p>其他人的实践例子：<a href="https://softwareengineering.stackexchange.com/questions/234511/what-is-the-best-practice-for-arranging-third-party-library-licenses-paperwork" target="_blank" rel="external">链接</a></p>
+</li>
+<li><p>建议直接用npm处理问题，比如npm install安装依赖，npm run make编译，虽然实际上调用的是electron-forge make。npm install途中可能会报错，删掉node_modules再重试几遍会比较好。</p>
+</li>
+<li><p>bootstrap的部分界面特效（比如弹窗）无法在electron app中使用。</p>
+</li>
+</ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Electron+Vue+Bootstrap的GUI应用开发难度应该是比Qt等库更加简单，而且具备跨平台的能力，如果熟悉了Electron中的套路，开发第二第三个electron app应该就更容易了。最重要还是要熟悉node.js那些操作，才能实现和本地软件的交互。</p>
+<p>在此特别感谢<a href="https://www.jianshu.com/u/a7454e40399d" target="_blank" rel="external">鳗驼螺</a> ，他的这篇文章算是个非常经典的electron app开发教程，无论是上下文菜单还是窗口菜单、对话框等，都有详细的介绍，感谢他的贡献，我才能顺利开发这个electron 应用。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/electron/">electron</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+  
     <article id="post-productiveipad2018"  class="article article-type-post" itemscope itemprop="blogPost" >
   <div id="articleInner" class="article-inner">
     
@@ -326,13 +417,13 @@
         <h1 id="怎么选了iPad-2018？"><a href="#怎么选了iPad-2018？" class="headerlink" title="怎么选了iPad 2018？"></a>怎么选了iPad 2018？</h1><p>最近手上多了笔钱，本来之前是考虑买一个1000多的国产Windows平板用来看电子书和作为廉价Surface用，但是看了下淘宝，1500以内的基本都是z8350的处理器，而Android平板主要是App不太行，所以选择加钱买iPad 2018，主要是看中它支持apple pencil。买之前我在知乎上看了下，不少人说2018款的非全贴合屏垃圾，刷新率不及pro，建议加钱入二手pro 9.7或者还在卖的pro 10.5。实际上我入手后（国行，深空灰128G WiFi版），的确是能感受到屏幕上的问题，但是实际使用时对于我影响不大，买的深空灰黑色面板还看不出大黑边。就只有知乎个个年薪百万的随随便便就说加钱买Pro，真的当那2000不是钱啊！iPad 2018 32G版对于学生党来说真的是超高性价比的苹果设备了，当然土豪是不需要性价比的，不过如果去港澳买的话、通过汇率可以将128G版的价格压到2600RMB左右。   </p>
 <p>我不是苹果全家桶用户，手上使用的设备是一台神舟游戏本+普通21寸IPS面板的显示器、小米6和这台iPad。文章接下来的内容主要是介绍我日常如何在学习上发挥iPad的作用。</p>
 <h1 id="基本盘"><a href="#基本盘" class="headerlink" title="基本盘"></a>基本盘</h1><p>首先是斧乃木妹妹的亮相 : )</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/yface.jpg" alt="Yay!Peace,Peace"></p>
-<h2 id="1-基本办公软件："><a href="#1-基本办公软件：" class="headerlink" title="1.基本办公软件："></a>1.基本办公软件：</h2><p><img src="http://oy30yrqej.bkt.clouddn.com/apps1.png" alt="http://oy30yrqej.bkt.clouddn.com/apps1.png"></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/85187673.jpg" alt="Yay!Peace,Peace"></p>
+<h2 id="1-基本办公软件："><a href="#1-基本办公软件：" class="headerlink" title="1.基本办公软件："></a>1.基本办公软件：</h2><p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/89928956.jpg" alt="http://oy30yrqej.bkt.clouddn.com/apps1.png"></p>
 <p>我主要是使用MS全家桶，Word、Excel、PowerPoint三个，还有Outlook、OneNote和OneDrive，Office Lens主要是方便扫描后导出文档（虽然iPad的摄像头真的不咋样，但是扫描文件、上课拍个PPT还是没问题的），因为我不是苹果全家桶，因此以跨平台的软件优先，To Do是微软出品的一款待办事项工具，支持Android、iOS和Windows，这样我的待办事项能同时在三个平台编辑和查看。而OneDrive主要作为跨平台交换文件的网盘，在国内因为某些原因网页版被DNS污染无法使用，但是客户端可以正常用，而且速度不慢，我一般会在电脑上下载好需要看的PDF然后直接复制到Win 10的OneDrive目录里，然后就可以在iPad上访问，拷贝到PDF阅读器或者保存在Documents（一个免费文件App）里，OneDrive默认只有5G，如果是365用户可以获得1T容量，还可以另外充值每个月1.49刀左右扩容至50G，这里我的选择是去淘宝找扩容服务，通过邀请好友的方式让容量扩张到最高15G，虽然不是太大，但是用于文件交换是足够了。虽然iOS 11提供了“文件”应用，但是Documents更方便，推荐使用。</p>
-<h2 id="2-Coding之类："><a href="#2-Coding之类：" class="headerlink" title="2.Coding之类："></a>2.Coding之类：</h2><p><img src="http://oy30yrqej.bkt.clouddn.com/apps4.png" alt=""></p>
+<h2 id="2-Coding之类："><a href="#2-Coding之类：" class="headerlink" title="2.Coding之类："></a>2.Coding之类：</h2><p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/6356860.jpg" alt=""></p>
 <p>有时可能需要远程控制自己的PC编辑代码，因此TeamViewer对于我来说是很有用的一个软件，用VNC之类的工具就能搞定远程代码编辑和电脑的维护，所以SSH对于我来说也很重要，有时需要远程连接Linux服务器，我使用的是Termius，免费使用。GoCoEdit是一个类似sublime text的软件，这个软件适合临时在本地写代码，但是不支持自动补全（估计很难提供）。Textcode Viewer是用来获取github上的repo进行code review。</p>
-<h2 id="3-其他："><a href="#3-其他：" class="headerlink" title="3.其他："></a>3.其他：</h2><p><img src="http://oy30yrqej.bkt.clouddn.com/apps5.png" alt=""></p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/apps6.png" alt=""></p>
+<h2 id="3-其他："><a href="#3-其他：" class="headerlink" title="3.其他："></a>3.其他：</h2><p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/4141492.jpg" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/51098185.jpg" alt=""></p>
 <p>Myscript Calculator可以手写计算，支持解方程之类的，但是写字太难看的人还是别用了…识别率还是比较感人，还不如直接下个正常的计算器app或者直接用CASIO算。  </p>
 <p>ShadowRocket，不用多说，懂行的人都知道，不过需要搞个美区ID购买， 搞一个美区ID最省事的方法就是某宝。  </p>
 <p>Chrome、Gmail、Google Drive和Google，因为我手机电脑都是用Chrome，跨设备同步非常方便，所以iPad理所当然是用Chrome，Gmail方便收右键，Google全家桶还不错。   </p>
@@ -541,9 +632,9 @@
 <p><a href="https://www.cnblogs.com/dkblog/archive/2011/08/26/2155018.html" target="_blank" rel="external">logging入门</a></p>
 <h3 id="股票平均价格计算"><a href="#股票平均价格计算" class="headerlink" title="股票平均价格计算"></a>股票平均价格计算</h3><p>之前一直没搞清楚怎么算摊薄的成本价，然后搞了下搞懂了，主要是三个公式：</p>
 <ol>
-<li><img src="http://oy30yrqej.bkt.clouddn.com/formula1.jpg" alt=""></li>
-<li><img src="http://oy30yrqej.bkt.clouddn.com/formula2.jpg" alt=""></li>
-<li><img src="http://oy30yrqej.bkt.clouddn.com/formula3.jpg" alt=""></li>
+<li><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/6734350.jpg" alt=""></li>
+<li><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/92869933.jpg" alt=""></li>
+<li><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/87577138.jpg" alt=""></li>
 </ol>
 <p>假设现在有同一股票的3笔交易，规则手续费和税费都按0.1%即0.001收，买入只收手续费，不满5元收足5元，卖出收手续费（规则与买入一样）和税费：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">(1) 5.5￥/2000股/买入；总值=11000；手续费=11000*0.1%=11；平均每股成本(后面均称为‘均价’)用公式1算得=5.50</div><div class="line">(2) 5.6￥/300股/买入；总值=1680；手续费=5；均价用公式2算得=5.52</div><div class="line">(3) 5.4￥/400股/卖出；总值=2160；手续费+税费=5+2.16=7.16；均价用公式3算得=5.54</div></pre></td></tr></table></figure>
@@ -679,19 +770,19 @@
 </ol>
 <p>下面就具体讲讲是怎么做的</p>
 <h2 id="1-创建vswitch"><a href="#1-创建vswitch" class="headerlink" title="1.创建vswitch"></a>1.创建vswitch</h2><p>打开Hyper-V管理器，选择“虚拟交换机管理器”：</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/1511362113%281%29.png" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/5311209.jpg" alt=""></p>
 <p>然后创建一个新的“内部网络”虚拟交换机，随便命名即可，我先前创的是VS NAT：</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/createvswitch.png" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/14450408.jpg" alt=""></p>
 <h2 id="2-修改网络接口"><a href="#2-修改网络接口" class="headerlink" title="2.修改网络接口"></a>2.修改网络接口</h2><p>创建完这个之后，就去控制面目板的“网络连接”选择你现在用的Internet适配器：</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/networkadapter.png" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/81462811.jpg" alt=""></p>
 <p>右键选择“属性”然后切换到“共享”的页面，允许你刚才创建的vswitch访问：</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/share.png" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/14144087.jpg" alt=""></p>
 <p>这样一来就完成了基本配置，这时候点开你创建的vswitch找IPv4属性，可以看到分配的IP地址和掩码：</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/vnat.png" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/39926489.jpg" alt=""></p>
 <h2 id="3-修改防火墙规则"><a href="#3-修改防火墙规则" class="headerlink" title="3.修改防火墙规则"></a>3.修改防火墙规则</h2><p>在做了上面的配置之后，使用你刚才创建的NAT vswitch的虚拟机都已经能上网，宿主机也能ping通虚拟机，但是虚拟机无法ping宿主，这就需要你启用下面的防火墙入站规则：</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/icmprule.png" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/77013435.jpg" alt=""></p>
 <p>然后也可以自定配置一个规则，允许来自虚拟机对宿主的任何访问：</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/myrules.png" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/98311745.jpg" alt=""></p>
 <p>配置就到此为止，虚拟机和宿主能互ping且虚拟机也能上网了</p>
 <h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://www.cnblogs.com/staneee/p/6879842.html" target="_blank" rel="external">Ping不通的解决方法</a></p>
 <p><a href="http://blog.csdn.net/rrrfff/article/details/51168376" target="_blank" rel="external">配置NAT</a></p>
@@ -749,7 +840,7 @@
 </ol>
 <p>后面我换了聚宽，聚宽的教程和文档和ricequant的都差不多也很清晰，聚宽还支持用requests来交换数据，但是问题又出现了，我要加密传输交易信号才行，本来问了朋友考虑用AES加密但是后面实际玩了下，聚宽的策略运行必须先回测，但我那套策略思路要搞回测很困难，而且回测的意义不大，因此决定放弃一切量化平台（虽然前期学习必须在那些平台上练手），自己做交易接口，不做回测了。</p>
 <p>万得终端有套支持excel、matlab和python等语言的本地交易API，但是文档像吃了屎一样，富途牛牛之类的客户端无法控制意义也不大。遂找网页版的模拟交易账户，一开始是找了同花顺的，但是太简陋，没用。后来看了下新浪爱财iTrade，也不算满意，最后找到了富途牛牛模拟交易的网页版入口，用手机注册即可。最重要的是一个网页同时支持A、H和美股的交易，可玩性就强了很多了。</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/ftnnshow" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/67369473.jpg" alt=""></p>
 <p>这么看来，以后要是实际跑策略实盘，估计直接用浏览器自动操作就可以了。前提是券商提供网页版下单入口。  </p>
 <h1 id="分析研究"><a href="#分析研究" class="headerlink" title="分析研究"></a>分析研究</h1><p>通过firefox抓包，我发现了富途牛牛网页交易时发送的数据结构，但是cookie有些内容搞不明白怎么生成的，于是选择了headless浏览器+splinter的方案</p>
 <p>在windows上直接用firefox测试，基本把登录、下单的测试代码弄出来了（下面是部分测试实例）：</p>
@@ -799,7 +890,7 @@ Out[55]:
 
 confirm[1].click()
 </code></pre><p>但是存在一个问题，无法指定撤单，只能先撤最新的单：</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/orders.png" alt=""></p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/53010563.jpg" alt=""></p>
 <p>问题存在的原因主要是splinter不支持根据class找元素，而我那时候还没搞懂xpath，结果就放弃了基于splinter的代码（实际上只要用xpath，没有任何元素是找不到的）</p>
 <p>我的splinter的初步方案是使用click_link_by_text(“撤单”)来做撤单，但是这个就无法撤前面的单，只能撤了最新的单再撤旧单。</p>
 <p>后面基于“根据class找元素”的想法，选择了selenium，这个库是splinter的底层，splinter只是简化了使用（也相当于减少了部分功能），后面不知咋的找到了xpath的资料翻了下，发现提取xpath简单到死，直接对着元素选择检查然后右键复制xpath即可，不过chrome和firefox的xpath格式不同，前者的往往是很简短的，比如：</p>
@@ -858,7 +949,7 @@ confirm[1].click()
       
         <h1 id="Intro"><a href="#Intro" class="headerlink" title="Intro"></a>Intro</h1><p>虽然在为VyOS写python-vyos-mgmt的时候已经被提醒过一定要学正则表达式，不过一直没空去学，然后今天准备去看看BotVS的资料的时候就看到有则关于正则的资料，遂趁开例会时的空闲时间快速入门了一把。虽然用bash的时候经常用*来rm，但是更复杂的基本不会用了。</p>
 <h1 id="资料"><a href="#资料" class="headerlink" title="资料"></a>资料</h1><p>这个cheat sheet包含了绝大多数的使用方式：</p>
-<p><img src="http://oy30yrqej.bkt.clouddn.com/pyre_ebb9ce1c-e5e8-4219-a8ae-7ee620d5f9f1.png" alt="">  </p>
+<p><img src="http://blogpics5437.oss-cn-shenzhen.aliyuncs.com/18-8-13/41946206.jpg" alt="">  </p>
 <p>更详细的文档可以参考这里：</p>
 <p><a href="http://www.cnblogs.com/huxi/archive/2010/07/04/1771073.html" target="_blank" rel="external">cheatsheet</a>   </p>
 <p>然后为了方便测试自己的正则表达式是否正确，推荐一个国人编写的运行在.Net的图形化工具Regester，最后更新在2017年6月:</p>
@@ -1001,55 +1092,12 @@ widgets:
 <!-- Table of Contents -->
 
   
-    <article id="post-thefirstblog"  class="article article-type-post" itemscope itemprop="blogPost" >
-  <div id="articleInner" class="article-inner">
+
+
+  <nav id="page-nav">
     
-    
-      <header class="article-header">
-        
-  
-    <h1 class="thumb" itemprop="name">
-      <a class="article-title" href="/2017/10/20/thefirstblog/">这是我搭建的Hexo的第一篇博客</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-meta">
-      
-	<a href="/2017/10/20/thefirstblog/" class="article-date">
-	  <time datetime="2017-10-20T11:08:01.000Z" itemprop="datePublished">2017-10-20</time>
-	</a>
-
-      
-    <a class="article-category-link" href="/categories/随笔/">随笔</a>
-
-      
-    </div>
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="说点什么"><a href="#说点什么" class="headerlink" title="说点什么"></a>说点什么</h1><p>这是我经过了一晚上折腾完成的基于Hexo的博客</p>
-<h1 id="感想"><a href="#感想" class="headerlink" title="感想"></a>感想</h1><p>其实主要是最近在部署交易系统的部分组件买了vps，然后看到好友们都有自己搭建的博客，所以还是决定自己来搭个，不再用之前Oschina的博客，想看我之前写的文章可以访问以下链接：<a href="https://my.oschina.net/hochikong/blog" target="_blank" rel="external">Oschina</a>。  </p>
-<p>也可以访问SDNLAB阅读我还做SDN的时候投的文章：<a href="http://www.sdnlab.com/author/997/" target="_blank" rel="external">SDNLAB</a>。  </p>
-<p>我还有个小站用weebly做的，可以通过访问本博客的<a href="http://h2q.weebly.com/" target="_blank" rel="external">Works</a>跳转到那边，那边会发一些与技术无关的东西，比如vaporwave相关的，或者游戏之类的，不过访问速度是有点慢（笑）。  </p>
-
-      
-    </div>
-    <footer class="article-footer">
-      
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/helloWorld/">helloWorld</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-<!-- Table of Contents -->
-
-  
-
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">下一页 &raquo;</a>
+  </nav>
 
 </section>
         
