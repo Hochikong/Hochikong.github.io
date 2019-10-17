@@ -296,6 +296,64 @@
         
           <section id="main" style="float:none;">
   
+    <article id="post-kotlinconstructor"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2018/02/01/kotlinconstructor/">Kotlin的Constructor总结</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2018/02/01/kotlinconstructor/" class="article-date">
+	  <time datetime="2018-02-01T05:38:54.000Z" itemprop="datePublished">2018-02-01</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/Kotlin学习/">Kotlin学习</a>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近开始学Kotlin，买了本《Kotlin极简教程》，以后绝对不要在京东阅读上买计算机的电子书，坑爹，我又去买了本实体版。最近看到面向对象这章，本文探讨了下构造函数的一些问题</p>
+<h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><p>构造函数简单而言就是在创建类的实例时调用的函数。Kotlin中如果没有可见修饰符或者注解(annotation)，就可以忽略不写constructor，反之则要写。修饰符和注解都要写在constructor前面。</p>
+<p>Kotlin支持类有一个主构造函数和一到多个次构造函数。使用次构造函数可以根据参数的不同创建不同的实例。比如下面的例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">class Person  constructor(val sex: String, val age: Int, val name: String)&#123;</div><div class="line">    var weight:Double = 0.0</div><div class="line">    init &#123;</div><div class="line">        println(&quot;The sex is $sex&quot;)</div><div class="line">        println(&quot;The age is $age&quot;)</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    constructor(sex: String, age: Int, name: String, weight: Double):this(sex,age,name)&#123;</div><div class="line">        this.weight = weight</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>我们可以这样调用：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">fun main(args: Array&lt;String&gt;)&#123;</div><div class="line">    val p1 = Person(&quot;male&quot;,23,&quot;jack&quot;)  //调用的主构造函数</div><div class="line">    println(&quot;All property of p1 is: sex-&gt;$&#123;p1.sex&#125;,age-&gt;$&#123;p1.age&#125;,name-&gt;$&#123;p1.name&#125;&quot;)</div><div class="line">    val p2 = Person(&quot;female&quot;,16,&quot;Michelle&quot;,45.7)  //调用次构造函数</div><div class="line">    println(&quot;The weight of P2 is $&#123;p2.weight&#125;&quot;)</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>返回的结果是:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">The sex is male</div><div class="line">The age is 23</div><div class="line">All property of p1 is: sex-&gt;male,age-&gt;23,name-&gt;jack</div><div class="line">The sex is female</div><div class="line">The age is 16</div><div class="line">The weight of P2 is 45.7</div></pre></td></tr></table></figure>
+<p>次构造函数的函数签名不能有val或者var，而且必须通过this委托给主构造函数。</p>
+<p>注意！</p>
+<p>1.只能在主构造函数里用init{}</p>
+<p>2.这样的代码是错的：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">class Person  constructor(val sex: String, val age: Int, val name: String)&#123;</div><div class="line">    init &#123;</div><div class="line">        println(&quot;The sex is $sex&quot;)</div><div class="line">        println(&quot;The age is $age&quot;)</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    constructor(sex: String, age: Int, name: String, weight: Double):this(sex,age,name)&#123;</div><div class="line">        val weight: Double = weight</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>如果想正确地访问weight变量，只能在主构造函数里创建变量并赋值（不然IDE会提示要不非抽象属性或者要初始化），然后通过this在次构造函数里赋合适的值。无法在次构造函数里创建val或者var</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Kotlin/">Kotlin</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+  
     <article id="post-tradeserverupdaterecord"  class="article article-type-post" itemscope itemprop="blogPost" >
   <div id="articleInner" class="article-inner">
     

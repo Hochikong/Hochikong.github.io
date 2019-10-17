@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>recursive cte解析 | HOCHIKONG&#39;s WAPORIZer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="PostgreSQL" />
+  
+  
+  
+  
+  <meta name="description" content="PostgreSQL递归CTE解析虽然本文以PG为主，但是递归CTE这个特性在MySQL，MariaDB等RDBMS都提供了。在讲解递归CTE之前先简单介绍下什么是CTE：CTE即Common Table Expression，以With语句开头，功能是在当前SQL执行期间起到一个临时表的作用。如果规划器分析到查询代价很高，还会执行物化提高效率（与PG的物化视图行为类似），CTEs在整个SQL语句">
+<meta name="keywords" content="PostgreSQL">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Recursive CTE解析">
+<meta property="og:url" content="http://yoursite.com/2019/10/17/recursivecte/index.html">
+<meta property="og:site_name" content="HOCHIKONG&#39;s WAPORIZer">
+<meta property="og:description" content="PostgreSQL递归CTE解析虽然本文以PG为主，但是递归CTE这个特性在MySQL，MariaDB等RDBMS都提供了。在讲解递归CTE之前先简单介绍下什么是CTE：CTE即Common Table Expression，以With语句开头，功能是在当前SQL执行期间起到一个临时表的作用。如果规划器分析到查询代价很高，还会执行物化提高效率（与PG的物化视图行为类似），CTEs在整个SQL语句">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-17T08:26:24.898Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Recursive CTE解析">
+<meta name="twitter:description" content="PostgreSQL递归CTE解析虽然本文以PG为主，但是递归CTE这个特性在MySQL，MariaDB等RDBMS都提供了。在讲解递归CTE之前先简单介绍下什么是CTE：CTE即Common Table Expression，以With语句开头，功能是在当前SQL执行期间起到一个临时表的作用。如果规划器分析到查询代价很高，还会执行物化提高效率（与PG的物化视图行为类似），CTEs在整个SQL语句">
+  
+    <link rel="alternate" href="/atom.xml" title="HOCHIKONG&#39;s WAPORIZer" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/vapor3.jpg">
+  <link rel="apple-touch-icon" href="/css/images/vapor3.jpg">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/9749f0/00000000000000000001008f/27/l?subset_id=2&fvd=n5) format("woff2");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/90cf9f/000000000000000000010091/27/l?subset_id=2&fvd=n7) format("woff2");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/8a5494/000000000000000000013365/27/l?subset_id=2&fvd=n4) format("woff2");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/d337d8/000000000000000000010095/27/l?subset_id=2&fvd=i4) format("woff2");font-weight:400;font-style:italic;}</style>
+  <link rel="stylesheet" href="/css/style.css">
+
+  <script src="/js/jquery-3.1.1.min.js"></script>
+  <script src="/js/bootstrap.js"></script>
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    <link rel="stylesheet" href="/css/dialog.css">
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+    <link rel="stylesheet" href="/css/vdonate.css" >
+  
+
+</head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="
+                 margin-top: 0px;"  
+                href="#" data-toggle="modal" data-target="#myModal" >
+                  <img width="124px" height="124px" alt="Hike News" src="/css/images/vapor3.jpg">
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">首页</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">归档</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">分类</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">标签</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">关于</a> </li>
+                
+                  <li> <a class="main-nav-link" href="https://ckho.top">Service</a> </li>
+                
+                  <li> <a class="main-nav-link" href="http://h2q.weebly.com">Works</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="请输入关键词..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(无标题)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-recursivecte" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      Recursive CTE解析
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2019/10/17/recursivecte/" class="article-date">
+	  <time datetime="2019-10-17T06:40:24.000Z" itemprop="datePublished">2019-10-17</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/SQL/">SQL</a>
+
+      
+	<a class="article-views">
+	<span id="busuanzi_container_page_pv">
+		阅读量<span id="busuanzi_value_page_pv"></span>
+	</span>
+	</a>
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="PostgreSQL递归CTE解析"><a href="#PostgreSQL递归CTE解析" class="headerlink" title="PostgreSQL递归CTE解析"></a>PostgreSQL递归CTE解析</h2><p>虽然本文以PG为主，但是递归CTE这个特性在MySQL，MariaDB等RDBMS都提供了。在讲解递归CTE之前先简单介绍下什么是CTE：CTE即Common Table Expression，以With语句开头，功能是在当前SQL执行期间起到一个临时表的作用。如果规划器分析到查询代价很高，还会执行物化提高效率（与PG的物化视图行为类似），CTEs在整个SQL语句执行周期内只会执行一次，CTEs之间还可以有依赖关系。</p>
+<h2 id="CTE的例子"><a href="#CTE的例子" class="headerlink" title="CTE的例子"></a>CTE的例子</h2><p>给定以下两表，查询同时修了X和Y两门课且成绩均大于等于40的学生信息：</p>
+<p>grades表：</p>
+<blockquote>
+<p>栏位  |  类型   | Collation | Nullable | Default<br>——-+———+———–+———-+———<br> class | text    |           |          |<br> sid   | integer |           |          |<br> grade | integer |           |          |</p>
+</blockquote>
+<p>student表：</p>
+<blockquote>
+<p> 栏位 |  类型   | Collation | Nullable | Default<br>——+———+———–+———-+———<br> sid  | integer |           |          |<br> name | text    |           |          |</p>
+</blockquote>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">WITH ctex AS ( <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> grades <span class="keyword">WHERE</span> grade &gt;= <span class="number">40</span> <span class="keyword">AND</span> <span class="keyword">class</span> = <span class="string">'X'</span>),</div><div class="line">     ctey <span class="keyword">AS</span> ( <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> grades <span class="keyword">WHERE</span> grade &gt;= <span class="number">40</span> <span class="keyword">AND</span> <span class="keyword">class</span> = <span class="string">'Y'</span>)</div><div class="line"><span class="keyword">SELECT</span> ctex.sid, ctex.class, ctex.grade, ctey.class, ctey.grade </div><div class="line"><span class="keyword">FROM</span> ctex <span class="keyword">JOIN</span> ctey <span class="keyword">ON</span> ctex.sid = ctey.sid;</div></pre></td></tr></table></figure>
+<p>上面的查询我使用了两个CTE，分别查询课程为X和Y且成绩大于等于40的分数记录，然后基于SID做一个inner join，即求得同时修了X和Y的课的学生ID为1和4：</p>
+<blockquote>
+<p>sid | class | grade | class | grade<br>—–+——-+——-+——-+——-<br>   1 | X     |    50 | Y     |    70<br>   4 | X     |    60 | Y     |   100<br>(2 行记录)</p>
+</blockquote>
+<p>使用CTE能让代码可读性更高，另一方面能提高查询效率，毕竟滥用子查询伤眼效率还不一定高。</p>
+<h2 id="递归CTE"><a href="#递归CTE" class="headerlink" title="递归CTE"></a>递归CTE</h2><p>本文的重点在递归版本的CTE，虽然是recursive，但用迭代iterative来描述更适合。</p>
+<p>想象数据库里有一个储存SQL查询结果的list（以python list为例），递归CTE由锚成员和迭代成员组成。步骤如下：</p>
+<p>1.首先执行锚成员查询，将查询的结果存入list的第一个位置</p>
+<p>2.然后执行迭代成员的查询，这个迭代成员的查询会使用到其index-1位置的SQL查询结果来计算出一个新的结果，并把结果存入list的第二个位置</p>
+<p>3.如此类推，最后通过UNION或UNION ALL合并查询结果（行为类似pandas的concat函数）</p>
+<p>下面是一个SQL版range的实现：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">WITH RECURSIVE cte AS (</div><div class="line">    <span class="keyword">SELECT</span> <span class="number">1</span> <span class="keyword">as</span> <span class="keyword">num</span></div><div class="line">    <span class="keyword">UNION</span></div><div class="line">    <span class="keyword">SELECT</span> <span class="keyword">num</span>+<span class="number">1</span> <span class="keyword">FROM</span> cte</div><div class="line">    <span class="keyword">WHERE</span> <span class="keyword">num</span> &lt; <span class="number">10</span></div><div class="line">)</div><div class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> cte;</div></pre></td></tr></table></figure>
+<p>其中，SELECT 1 AS num是锚成员，首先执行锚成员的查询，存入list，然后执行SELECT num+1 FROM cte，即调用锚成员的查询结果(num = 1)，再加1；然后where num &lt; 10是迭代条件；使用UNION合并所有行（合并list里的所有成员）；上面的代码相当于python的range(1, 11)，结果如下：</p>
+<blockquote>
+<h2 id="num"><a href="#num" class="headerlink" title=" num"></a> num</h2><p>   1<br>   2<br>   3<br>   4<br>   5<br>   6<br>   7<br>   8<br>   9<br>  10<br>(10 行记录)</p>
+</blockquote>
+<h2 id="更复杂点的例子"><a href="#更复杂点的例子" class="headerlink" title="更复杂点的例子"></a>更复杂点的例子</h2><p>首先执行下面的SQL语句创建表和导入数据：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> employees (</div><div class="line">   employee_id <span class="built_in">serial</span> PRIMARY <span class="keyword">KEY</span>,</div><div class="line">   full_name <span class="built_in">VARCHAR</span> <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">   manager_id <span class="built_in">INT</span></div><div class="line">);</div><div class="line"></div><div class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> employees (</div><div class="line">   employee_id,</div><div class="line">   full_name,</div><div class="line">   manager_id</div><div class="line">)</div><div class="line"><span class="keyword">VALUES</span></div><div class="line">   (<span class="number">1</span>, <span class="string">'Michael North'</span>, <span class="literal">NULL</span>),</div><div class="line">   (<span class="number">2</span>, <span class="string">'Megan Berry'</span>, <span class="number">1</span>),</div><div class="line">   (<span class="number">3</span>, <span class="string">'Sarah Berry'</span>, <span class="number">1</span>),</div><div class="line">   (<span class="number">4</span>, <span class="string">'Zoe Black'</span>, <span class="number">1</span>),</div><div class="line">   (<span class="number">5</span>, <span class="string">'Tim James'</span>, <span class="number">1</span>),</div><div class="line">   (<span class="number">6</span>, <span class="string">'Bella Tucker'</span>, <span class="number">2</span>),</div><div class="line">   (<span class="number">7</span>, <span class="string">'Ryan Metcalfe'</span>, <span class="number">2</span>),</div><div class="line">   (<span class="number">8</span>, <span class="string">'Max Mills'</span>, <span class="number">2</span>),</div><div class="line">   (<span class="number">9</span>, <span class="string">'Benjamin Glover'</span>, <span class="number">2</span>),</div><div class="line">   (<span class="number">10</span>, <span class="string">'Carolyn Henderson'</span>, <span class="number">3</span>),</div><div class="line">   (<span class="number">11</span>, <span class="string">'Nicola Kelly'</span>, <span class="number">3</span>),</div><div class="line">   (<span class="number">12</span>, <span class="string">'Alexandra Climo'</span>, <span class="number">3</span>),</div><div class="line">   (<span class="number">13</span>, <span class="string">'Dominic King'</span>, <span class="number">3</span>),</div><div class="line">   (<span class="number">14</span>, <span class="string">'Leonard Gray'</span>, <span class="number">4</span>),</div><div class="line">   (<span class="number">15</span>, <span class="string">'Eric Rampling'</span>, <span class="number">4</span>),</div><div class="line">   (<span class="number">16</span>, <span class="string">'Piers Paige'</span>, <span class="number">7</span>),</div><div class="line">   (<span class="number">17</span>, <span class="string">'Ryan Henderson'</span>, <span class="number">7</span>),</div><div class="line">   (<span class="number">18</span>, <span class="string">'Frank Tucker'</span>, <span class="number">8</span>),</div><div class="line">   (<span class="number">19</span>, <span class="string">'Nathan Ferguson'</span>, <span class="number">8</span>),</div><div class="line">   (<span class="number">20</span>, <span class="string">'Kevin Rampling'</span>, <span class="number">8</span>);</div></pre></td></tr></table></figure>
+<p>然后想找出员工ID为2的雇员的全部下属（下属的下属也被包含在内）</p>
+<p>可以使用下面的递归CTE：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">WITH RECURSIVE subordinates AS (</div><div class="line">   <span class="keyword">SELECT</span></div><div class="line">      employee_id,</div><div class="line">      manager_id,</div><div class="line">      full_name</div><div class="line">   <span class="keyword">FROM</span></div><div class="line">      employees</div><div class="line">   <span class="keyword">WHERE</span></div><div class="line">      employee_id = <span class="number">2</span></div><div class="line">   <span class="keyword">UNION</span></div><div class="line">      <span class="keyword">SELECT</span></div><div class="line">         e.employee_id,</div><div class="line">         e.manager_id,</div><div class="line">         e.full_name</div><div class="line">      <span class="keyword">FROM</span></div><div class="line">         employees e</div><div class="line">      <span class="keyword">INNER</span> <span class="keyword">JOIN</span> subordinates s <span class="keyword">ON</span> s.employee_id = e.manager_id</div><div class="line">) <span class="keyword">SELECT</span></div><div class="line">   *</div><div class="line"><span class="keyword">FROM</span></div><div class="line">   subordinates;</div></pre></td></tr></table></figure>
+<p>首先先选出了employee_id为2的雇员信息作为锚成员的查询结果（只有一条记录），然后在UNION后面的迭代成员从“锚结果 JOIN employees”的结果里查询出manger_id等于2的全部雇员信息，然后再重复迭代成员的查询，查找manager_id为2的雇员的所有下属。</p>
+<p>上面的查询等价于下面的CTE：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">WITH cte AS ( <span class="keyword">SELECT</span> employee_id, manager_id, full_name <span class="keyword">FROM</span> employees <span class="keyword">WHERE</span> employee_id = <span class="number">2</span>),</div><div class="line">     cte1 <span class="keyword">AS</span> ( <span class="keyword">SELECT</span> e.employee_id, e.manager_id, e.full_name <span class="keyword">FROM</span> employees e</div><div class="line">         <span class="keyword">JOIN</span> cte s <span class="keyword">ON</span> s.employee_id = e.manager_id),</div><div class="line">     cte2 <span class="keyword">AS</span> ( <span class="keyword">SELECT</span> e.employee_id, e.manager_id, e.full_name <span class="keyword">FROM</span> employees e</div><div class="line">         <span class="keyword">JOIN</span> cte1 s <span class="keyword">ON</span> s.employee_id = e.manager_id)</div><div class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> cte <span class="keyword">UNION</span> <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> cte1 <span class="keyword">UNION</span> <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> cte2 <span class="keyword">ORDER</span> <span class="keyword">BY</span> employee_id;</div></pre></td></tr></table></figure>
+<p>为了达到同样的目的，使用嵌套CTE需要写3个CTE（还是已知employee_id为2的这个人的下属有多少层的前提下），而使用递归CTE可以简化代码，并实现普通查询无法实现的查询。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        <div id="donation_div"></div>
+
+<script src="/js/vdonate.js"></script>
+<script>
+var a = new Donate({
+  title: '如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作!', // 可选参数，打赏标题
+  btnText: '打赏支持', // 可选参数，打赏按钮文字
+  el: document.getElementById('donation_div'),
+  wechatImage: 'https://github.com/Hochikong/ckho-photolib/raw/master/donate/donateWechat.jpg',
+  alipayImage: 'https://github.com/Hochikong/ckho-photolib/blob/master/donate/donateWechat.jpg'
+});
+</script>
+      
+      
+        
+	<div id="comment">
+		<!-- 来必力City版安装代码 -->
+		<div id="lv-container" data-id="city" data-uid="MTAyMC8zMTQzNy84MDAx">
+		<script type="text/javascript">
+		   (function(d, s) {
+		       var j, e = d.getElementsByTagName(s)[0];
+
+		       if (typeof LivereTower === 'function') { return; }
+
+		       j = d.createElement(s);
+		       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+		       j.async = true;
+
+		       e.parentNode.insertBefore(j, e);
+		   })(document, 'script');
+		</script>
+		<noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+		</div>
+		<!-- City版安装代码已完成 -->
+	</div>
+
+
+
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2019/04/13/anotherExplainationToSubAndIncEffect/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">另一种解释收入效应与替代效应例子的途径</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#PostgreSQL递归CTE解析"><span class="nav-number">1.</span> <span class="nav-text">PostgreSQL递归CTE解析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CTE的例子"><span class="nav-number">2.</span> <span class="nav-text">CTE的例子</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#递归CTE"><span class="nav-number">3.</span> <span class="nav-text">递归CTE</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#num"><span class="nav-number">4.</span> <span class="nav-text"> num</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#更复杂点的例子"><span class="nav-number">5.</span> <span class="nav-text">更复杂点的例子</span></a></li></ol>
+    
+    </div>
+  </aside>
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2017 - 2019 HOCHIKONG&#39;s WAPORIZer All Rights Reserved.</p>
+	      
+	      
+    		<p class="busuanzi_uv">
+				访客数 : <span id="busuanzi_value_site_uv"></span> |  
+				访问量 : <span id="busuanzi_value_site_pv"></span>
+		    </p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+    <a href="https://ckho.top" class="mobile-nav-link">Service</a>
+  
+    <a href="http://h2q.weebly.com" class="mobile-nav-link">Works</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+  <script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+	<div style="display: none;">
+    <script src="https://s95.cnzz.com/z_stat.php?id=1260716016&web_id=1260716016" language="JavaScript"></script>
+  </div>
+
+
+
+	<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+	</script>
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            HOCHIKONG&#39;s WAPORIZer
+          </div>
+          <div class="panel-body">
+            Copyright © 2019 Hochikong All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>

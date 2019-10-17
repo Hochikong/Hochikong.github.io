@@ -296,6 +296,86 @@
         
           <section id="main" style="float:none;">
   
+    <article id="post-recursivecte"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2019/10/17/recursivecte/">Recursive CTE解析</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2019/10/17/recursivecte/" class="article-date">
+	  <time datetime="2019-10-17T06:40:24.000Z" itemprop="datePublished">2019-10-17</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/SQL/">SQL</a>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="PostgreSQL递归CTE解析"><a href="#PostgreSQL递归CTE解析" class="headerlink" title="PostgreSQL递归CTE解析"></a>PostgreSQL递归CTE解析</h2><p>虽然本文以PG为主，但是递归CTE这个特性在MySQL，MariaDB等RDBMS都提供了。在讲解递归CTE之前先简单介绍下什么是CTE：CTE即Common Table Expression，以With语句开头，功能是在当前SQL执行期间起到一个临时表的作用。如果规划器分析到查询代价很高，还会执行物化提高效率（与PG的物化视图行为类似），CTEs在整个SQL语句执行周期内只会执行一次，CTEs之间还可以有依赖关系。</p>
+<h2 id="CTE的例子"><a href="#CTE的例子" class="headerlink" title="CTE的例子"></a>CTE的例子</h2><p>给定以下两表，查询同时修了X和Y两门课且成绩均大于等于40的学生信息：</p>
+<p>grades表：</p>
+<blockquote>
+<p>栏位  |  类型   | Collation | Nullable | Default<br>——-+———+———–+———-+———<br> class | text    |           |          |<br> sid   | integer |           |          |<br> grade | integer |           |          |</p>
+</blockquote>
+<p>student表：</p>
+<blockquote>
+<p> 栏位 |  类型   | Collation | Nullable | Default<br>——+———+———–+———-+———<br> sid  | integer |           |          |<br> name | text    |           |          |</p>
+</blockquote>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">WITH ctex AS ( <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> grades <span class="keyword">WHERE</span> grade &gt;= <span class="number">40</span> <span class="keyword">AND</span> <span class="keyword">class</span> = <span class="string">'X'</span>),</div><div class="line">     ctey <span class="keyword">AS</span> ( <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> grades <span class="keyword">WHERE</span> grade &gt;= <span class="number">40</span> <span class="keyword">AND</span> <span class="keyword">class</span> = <span class="string">'Y'</span>)</div><div class="line"><span class="keyword">SELECT</span> ctex.sid, ctex.class, ctex.grade, ctey.class, ctey.grade </div><div class="line"><span class="keyword">FROM</span> ctex <span class="keyword">JOIN</span> ctey <span class="keyword">ON</span> ctex.sid = ctey.sid;</div></pre></td></tr></table></figure>
+<p>上面的查询我使用了两个CTE，分别查询课程为X和Y且成绩大于等于40的分数记录，然后基于SID做一个inner join，即求得同时修了X和Y的课的学生ID为1和4：</p>
+<blockquote>
+<p>sid | class | grade | class | grade<br>—–+——-+——-+——-+——-<br>   1 | X     |    50 | Y     |    70<br>   4 | X     |    60 | Y     |   100<br>(2 行记录)</p>
+</blockquote>
+<p>使用CTE能让代码可读性更高，另一方面能提高查询效率，毕竟滥用子查询伤眼效率还不一定高。</p>
+<h2 id="递归CTE"><a href="#递归CTE" class="headerlink" title="递归CTE"></a>递归CTE</h2><p>本文的重点在递归版本的CTE，虽然是recursive，但用迭代iterative来描述更适合。</p>
+<p>想象数据库里有一个储存SQL查询结果的list（以python list为例），递归CTE由锚成员和迭代成员组成。步骤如下：</p>
+<p>1.首先执行锚成员查询，将查询的结果存入list的第一个位置</p>
+<p>2.然后执行迭代成员的查询，这个迭代成员的查询会使用到其index-1位置的SQL查询结果来计算出一个新的结果，并把结果存入list的第二个位置</p>
+<p>3.如此类推，最后通过UNION或UNION ALL合并查询结果（行为类似pandas的concat函数）</p>
+<p>下面是一个SQL版range的实现：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">WITH RECURSIVE cte AS (</div><div class="line">    <span class="keyword">SELECT</span> <span class="number">1</span> <span class="keyword">as</span> <span class="keyword">num</span></div><div class="line">    <span class="keyword">UNION</span></div><div class="line">    <span class="keyword">SELECT</span> <span class="keyword">num</span>+<span class="number">1</span> <span class="keyword">FROM</span> cte</div><div class="line">    <span class="keyword">WHERE</span> <span class="keyword">num</span> &lt; <span class="number">10</span></div><div class="line">)</div><div class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> cte;</div></pre></td></tr></table></figure>
+<p>其中，SELECT 1 AS num是锚成员，首先执行锚成员的查询，存入list，然后执行SELECT num+1 FROM cte，即调用锚成员的查询结果(num = 1)，再加1；然后where num &lt; 10是迭代条件；使用UNION合并所有行（合并list里的所有成员）；上面的代码相当于python的range(1, 11)，结果如下：</p>
+<blockquote>
+<h2 id="num"><a href="#num" class="headerlink" title=" num"></a> num</h2><p>   1<br>   2<br>   3<br>   4<br>   5<br>   6<br>   7<br>   8<br>   9<br>  10<br>(10 行记录)</p>
+</blockquote>
+<h2 id="更复杂点的例子"><a href="#更复杂点的例子" class="headerlink" title="更复杂点的例子"></a>更复杂点的例子</h2><p>首先执行下面的SQL语句创建表和导入数据：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> employees (</div><div class="line">   employee_id <span class="built_in">serial</span> PRIMARY <span class="keyword">KEY</span>,</div><div class="line">   full_name <span class="built_in">VARCHAR</span> <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">   manager_id <span class="built_in">INT</span></div><div class="line">);</div><div class="line"></div><div class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> employees (</div><div class="line">   employee_id,</div><div class="line">   full_name,</div><div class="line">   manager_id</div><div class="line">)</div><div class="line"><span class="keyword">VALUES</span></div><div class="line">   (<span class="number">1</span>, <span class="string">'Michael North'</span>, <span class="literal">NULL</span>),</div><div class="line">   (<span class="number">2</span>, <span class="string">'Megan Berry'</span>, <span class="number">1</span>),</div><div class="line">   (<span class="number">3</span>, <span class="string">'Sarah Berry'</span>, <span class="number">1</span>),</div><div class="line">   (<span class="number">4</span>, <span class="string">'Zoe Black'</span>, <span class="number">1</span>),</div><div class="line">   (<span class="number">5</span>, <span class="string">'Tim James'</span>, <span class="number">1</span>),</div><div class="line">   (<span class="number">6</span>, <span class="string">'Bella Tucker'</span>, <span class="number">2</span>),</div><div class="line">   (<span class="number">7</span>, <span class="string">'Ryan Metcalfe'</span>, <span class="number">2</span>),</div><div class="line">   (<span class="number">8</span>, <span class="string">'Max Mills'</span>, <span class="number">2</span>),</div><div class="line">   (<span class="number">9</span>, <span class="string">'Benjamin Glover'</span>, <span class="number">2</span>),</div><div class="line">   (<span class="number">10</span>, <span class="string">'Carolyn Henderson'</span>, <span class="number">3</span>),</div><div class="line">   (<span class="number">11</span>, <span class="string">'Nicola Kelly'</span>, <span class="number">3</span>),</div><div class="line">   (<span class="number">12</span>, <span class="string">'Alexandra Climo'</span>, <span class="number">3</span>),</div><div class="line">   (<span class="number">13</span>, <span class="string">'Dominic King'</span>, <span class="number">3</span>),</div><div class="line">   (<span class="number">14</span>, <span class="string">'Leonard Gray'</span>, <span class="number">4</span>),</div><div class="line">   (<span class="number">15</span>, <span class="string">'Eric Rampling'</span>, <span class="number">4</span>),</div><div class="line">   (<span class="number">16</span>, <span class="string">'Piers Paige'</span>, <span class="number">7</span>),</div><div class="line">   (<span class="number">17</span>, <span class="string">'Ryan Henderson'</span>, <span class="number">7</span>),</div><div class="line">   (<span class="number">18</span>, <span class="string">'Frank Tucker'</span>, <span class="number">8</span>),</div><div class="line">   (<span class="number">19</span>, <span class="string">'Nathan Ferguson'</span>, <span class="number">8</span>),</div><div class="line">   (<span class="number">20</span>, <span class="string">'Kevin Rampling'</span>, <span class="number">8</span>);</div></pre></td></tr></table></figure>
+<p>然后想找出员工ID为2的雇员的全部下属（下属的下属也被包含在内）</p>
+<p>可以使用下面的递归CTE：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">WITH RECURSIVE subordinates AS (</div><div class="line">   <span class="keyword">SELECT</span></div><div class="line">      employee_id,</div><div class="line">      manager_id,</div><div class="line">      full_name</div><div class="line">   <span class="keyword">FROM</span></div><div class="line">      employees</div><div class="line">   <span class="keyword">WHERE</span></div><div class="line">      employee_id = <span class="number">2</span></div><div class="line">   <span class="keyword">UNION</span></div><div class="line">      <span class="keyword">SELECT</span></div><div class="line">         e.employee_id,</div><div class="line">         e.manager_id,</div><div class="line">         e.full_name</div><div class="line">      <span class="keyword">FROM</span></div><div class="line">         employees e</div><div class="line">      <span class="keyword">INNER</span> <span class="keyword">JOIN</span> subordinates s <span class="keyword">ON</span> s.employee_id = e.manager_id</div><div class="line">) <span class="keyword">SELECT</span></div><div class="line">   *</div><div class="line"><span class="keyword">FROM</span></div><div class="line">   subordinates;</div></pre></td></tr></table></figure>
+<p>首先先选出了employee_id为2的雇员信息作为锚成员的查询结果（只有一条记录），然后在UNION后面的迭代成员从“锚结果 JOIN employees”的结果里查询出manger_id等于2的全部雇员信息，然后再重复迭代成员的查询，查找manager_id为2的雇员的所有下属。</p>
+<p>上面的查询等价于下面的CTE：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">WITH cte AS ( <span class="keyword">SELECT</span> employee_id, manager_id, full_name <span class="keyword">FROM</span> employees <span class="keyword">WHERE</span> employee_id = <span class="number">2</span>),</div><div class="line">     cte1 <span class="keyword">AS</span> ( <span class="keyword">SELECT</span> e.employee_id, e.manager_id, e.full_name <span class="keyword">FROM</span> employees e</div><div class="line">         <span class="keyword">JOIN</span> cte s <span class="keyword">ON</span> s.employee_id = e.manager_id),</div><div class="line">     cte2 <span class="keyword">AS</span> ( <span class="keyword">SELECT</span> e.employee_id, e.manager_id, e.full_name <span class="keyword">FROM</span> employees e</div><div class="line">         <span class="keyword">JOIN</span> cte1 s <span class="keyword">ON</span> s.employee_id = e.manager_id)</div><div class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> cte <span class="keyword">UNION</span> <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> cte1 <span class="keyword">UNION</span> <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> cte2 <span class="keyword">ORDER</span> <span class="keyword">BY</span> employee_id;</div></pre></td></tr></table></figure>
+<p>为了达到同样的目的，使用嵌套CTE需要写3个CTE（还是已知employee_id为2的这个人的下属有多少层的前提下），而使用递归CTE可以简化代码，并实现普通查询无法实现的查询。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PostgreSQL/">PostgreSQL</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+  
     <article id="post-anotherExplainationToSubAndIncEffect"  class="article article-type-post" itemscope itemprop="blogPost" >
   <div id="articleInner" class="article-inner">
     
@@ -922,64 +1002,6 @@
 <h3 id="10-类默认是final的"><a href="#10-类默认是final的" class="headerlink" title="10.类默认是final的"></a>10.类默认是final的</h3><p>Kotlin里所有类默认都是final，想让它能继承需要加open修饰符，或者用一个插件kotlin-allopen。他们认为这是具有争议的，但是从我个人来看这没什么问题，只是写个open而已，而且想玩花样，代理模式、装饰器模式都是能用的…</p>
 <h3 id="11-陡峭的学习曲线"><a href="#11-陡峭的学习曲线" class="headerlink" title="11.陡峭的学习曲线"></a>11.陡峭的学习曲线</h3><p>这点…你们开心就好，我学习Kotlin也没花太长时间，要比学习曲线你干嘛不跟Scala比？当然相对Groovy的确需要些时间，但是我学它真的没花多久时间…而且我是学了Kotlin才正式、认真地学Java的。</p>
 <h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>当然，我写这篇东西并不是为了反驳他们，对于他们的工作环境、团队而言，Java 10可能是更好的选择，他们也是再三强调那篇东西并不是为了吹捧Java看衰Kotlin。对于我个人来说，自己做项目更多的还是会考虑Kotlin，毕竟写纯Java我是有点嫌弃的，虽然IDEA聪明得很，但是还是经常要按快捷键生成模板代码，而且我是从Python转过来的，Kotlin在某种程度来说比Java更让人有熟悉的感觉。btw，只有low逼会为了某个OS、技术而和别人争个你死我活，干活的人都是什么适合就用什么，不能赚钱、创造影响力有何意义？</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Kotlin/">Kotlin</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-<!-- Table of Contents -->
-
-  
-    <article id="post-kotlinconstructor"  class="article article-type-post" itemscope itemprop="blogPost" >
-  <div id="articleInner" class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 class="thumb" itemprop="name">
-      <a class="article-title" href="/2018/02/01/kotlinconstructor/">Kotlin的Constructor总结</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-meta">
-      
-	<a href="/2018/02/01/kotlinconstructor/" class="article-date">
-	  <time datetime="2018-02-01T05:38:54.000Z" itemprop="datePublished">2018-02-01</time>
-	</a>
-
-      
-    <a class="article-category-link" href="/categories/Kotlin学习/">Kotlin学习</a>
-
-      
-    </div>
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近开始学Kotlin，买了本《Kotlin极简教程》，以后绝对不要在京东阅读上买计算机的电子书，坑爹，我又去买了本实体版。最近看到面向对象这章，本文探讨了下构造函数的一些问题</p>
-<h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><p>构造函数简单而言就是在创建类的实例时调用的函数。Kotlin中如果没有可见修饰符或者注解(annotation)，就可以忽略不写constructor，反之则要写。修饰符和注解都要写在constructor前面。</p>
-<p>Kotlin支持类有一个主构造函数和一到多个次构造函数。使用次构造函数可以根据参数的不同创建不同的实例。比如下面的例子：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">class Person  constructor(val sex: String, val age: Int, val name: String)&#123;</div><div class="line">    var weight:Double = 0.0</div><div class="line">    init &#123;</div><div class="line">        println(&quot;The sex is $sex&quot;)</div><div class="line">        println(&quot;The age is $age&quot;)</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    constructor(sex: String, age: Int, name: String, weight: Double):this(sex,age,name)&#123;</div><div class="line">        this.weight = weight</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>我们可以这样调用：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">fun main(args: Array&lt;String&gt;)&#123;</div><div class="line">    val p1 = Person(&quot;male&quot;,23,&quot;jack&quot;)  //调用的主构造函数</div><div class="line">    println(&quot;All property of p1 is: sex-&gt;$&#123;p1.sex&#125;,age-&gt;$&#123;p1.age&#125;,name-&gt;$&#123;p1.name&#125;&quot;)</div><div class="line">    val p2 = Person(&quot;female&quot;,16,&quot;Michelle&quot;,45.7)  //调用次构造函数</div><div class="line">    println(&quot;The weight of P2 is $&#123;p2.weight&#125;&quot;)</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>返回的结果是:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">The sex is male</div><div class="line">The age is 23</div><div class="line">All property of p1 is: sex-&gt;male,age-&gt;23,name-&gt;jack</div><div class="line">The sex is female</div><div class="line">The age is 16</div><div class="line">The weight of P2 is 45.7</div></pre></td></tr></table></figure>
-<p>次构造函数的函数签名不能有val或者var，而且必须通过this委托给主构造函数。</p>
-<p>注意！</p>
-<p>1.只能在主构造函数里用init{}</p>
-<p>2.这样的代码是错的：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">class Person  constructor(val sex: String, val age: Int, val name: String)&#123;</div><div class="line">    init &#123;</div><div class="line">        println(&quot;The sex is $sex&quot;)</div><div class="line">        println(&quot;The age is $age&quot;)</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    constructor(sex: String, age: Int, name: String, weight: Double):this(sex,age,name)&#123;</div><div class="line">        val weight: Double = weight</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>如果想正确地访问weight变量，只能在主构造函数里创建变量并赋值（不然IDE会提示要不非抽象属性或者要初始化），然后通过this在次构造函数里赋合适的值。无法在次构造函数里创建val或者var</p>
 
       
     </div>
