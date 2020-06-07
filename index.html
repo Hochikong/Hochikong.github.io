@@ -341,7 +341,7 @@
 <p><img src="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/downloadtool.png" alt=""></p>
 <p>直接点选“START”，会自动在DETECTED INFO那里显示硬件信息。然后参考下图设置烧录工具：</p>
 <p><img src="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/download.png" alt=""></p>
-<p>首先选择合适的固件，因为我的ESP-01S的flash是8Mbit，所以要选择包里对应的8Mbit固件，然后在后方的框填上“0x00000”。至于其他参数，就看图片里的设置。最后是烧录软件的port和baud都要设置好，一般的baud应该为1152000。</p>
+<p>首先选择合适的固件，因为我的ESP-01S的flash是8Mbit，所以要选择包里对应的8Mbit固件，然后在后方的框填上“0x00000”（上图里填漏了一个0）。至于其他参数，就看图片里的设置。最后是烧录软件的port和baud都要设置好，一般的baud应该为115200。</p>
 <p>设置好点击“START”就会自动烧录固件了，烧录完可以重复上一节的AT指令测试检查是否烧录成功。</p>
 <h2 id="与Arduino的协作"><a href="#与Arduino的协作" class="headerlink" title="与Arduino的协作"></a>与Arduino的协作</h2><p>与Arduino协作前最好先用下载器在电脑上改掉ESP-01S的默认波特率(baud)，可以输入指令”AT+UART_DEF=9600,8,1,0,0”修改。具体的指令描述和用法请去查乐鑫的AT指令手册。</p>
 <p>ESP8266本身就是一个MCU，可以用专用的SDK编程，在这个实验里，我只拿它当一个独立工作的wifi模块使用。ESP-01S的引脚参考下图：</p>
