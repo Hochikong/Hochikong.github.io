@@ -296,6 +296,80 @@
         
           <section id="main" style="float:none;">
   
+    <article id="post-kotlinandjavacomment"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2018/05/29/kotlinandjavacomment/">评论一篇关于Kotlin与Java的文章</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2018/05/29/kotlinandjavacomment/" class="article-date">
+	  <time datetime="2018-05-29T14:57:08.000Z" itemprop="datePublished">2018-05-29</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/Kotlin学习/">Kotlin学习</a>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>经过一段时间，我已经把Kotlin的学习基本搞定，虽然最近在学Vue.js，但是还是有在关注Kotlin的事。今天偶然看到一篇<a href="https://allegro.tech/2018/05/From-Java-to-Kotlin-and-Back-Again.html" target="_blank" rel="external">文章</a>，讲的是Allegro（一家波兰的购物平台，可能是类似淘宝的网站）从Java转到Kotlin又转回Java的事。背景是Allegro在2017年夏天计划写个微服务，为了尝试新的技术然后转到Kotlin上，使用Groovy+Spock做测试，而在2018年他们又把微服务用Java重写，跑在Java10上。</p>
+<h2 id="为什么选择Java而不是Kotlin，下面是他们提出的观点"><a href="#为什么选择Java而不是Kotlin，下面是他们提出的观点" class="headerlink" title="为什么选择Java而不是Kotlin，下面是他们提出的观点"></a>为什么选择Java而不是Kotlin，下面是他们提出的观点</h2><h3 id="1-Name-Shadowing"><a href="#1-Name-Shadowing" class="headerlink" title="1.Name Shadowing"></a>1.Name Shadowing</h3><p>这个东西我也不太清楚该怎么翻译，但是理解起来就是Kotlin没有做到这一点。在Python里，我们知道函数体内部的同名变量会自动屏蔽外部作用域的同名变量，参考下面的代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="meta">&gt;&gt;&gt; </span>num = <span class="number">2</span></div><div class="line"><span class="meta">&gt;&gt;&gt; </span><span class="function"><span class="keyword">def</span> <span class="title">inc</span><span class="params">(x)</span>:</span></div><div class="line"><span class="meta">... </span>    num = <span class="number">1</span></div><div class="line"><span class="meta">... </span>    print(num+x)</div><div class="line">...</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>inc(<span class="number">1</span>)</div><div class="line"><span class="number">2</span></div><div class="line"><span class="meta">&gt;&gt;&gt; </span>inc(<span class="number">2</span>)</div><div class="line"><span class="number">3</span></div><div class="line">&gt;&gt;&gt;</div></pre></td></tr></table></figure>
+<p>可以看到即使外部定义了num=2，但是在函数体内num=1。而他们给出了一个有点勉强的例子：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">fun</span> <span class="title">inc</span><span class="params">(num : <span class="type">Int</span>)</span></span> &#123;</div><div class="line">    <span class="keyword">val</span> num = <span class="number">2</span></div><div class="line">    <span class="keyword">if</span> (num &gt; <span class="number">0</span>) &#123;</div><div class="line">        <span class="keyword">val</span> num = <span class="number">3</span></div><div class="line">    &#125;</div><div class="line">    println (<span class="string">"num: "</span> + num)</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面的代码执行inc(1)，得到的结果是2，意味着只是纯粹的将方法体内第一个num的结果打印了出来，而if的代码块里却又定义了一个同名的变量。他们的意见是：这种代码在Java里是无法通过编译的，因为不能在同一方法作用域里同时定义两个同名变量，但是Kotlin却让这种代码通过了。实际上上面的代码，在IDEA里会提示if语句里的num没有被使用，如果关注方法体内的无用变量的话就会发现这种问题，然而，最重要的一点是，我不清楚谁会写出这样的代码：在同一函数体内定义两个同名变量却指望的是第一个变量的值发生变化。这种错误我觉得纯粹是程序员自己的问题，而不算语言的问题，语言不背这个锅，不写单元测试别赖IDE和语言把你带坑里。</p>
+<h3 id="2-类型推导"><a href="#2-类型推导" class="headerlink" title="2.类型推导"></a>2.类型推导</h3><p>Java10可以使用类似JavaScript的方式定义变量，不需要显式声明变量类型：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">var a = <span class="string">"10"</span>;</div></pre></td></tr></table></figure>
+<p>我觉得这不是什么太大的问题，而且为什么你们公司这么快就敢上Java10？没有任何迁移成本？</p>
+<h3 id="3-空安全"><a href="#3-空安全" class="headerlink" title="3.空安全"></a>3.空安全</h3><p>Kotlin经常强调空安全的问题。但是一旦与Java交互的话，Java可能会毁掉Kotlin的空安全机制。Kotlin里变量无非是两种类型，T与T?，后者表示变量可空，但是有一种特殊类型，来自Java代码的T!，表示类型未确定，可能是T也可能是T?，这样就会导致难以预测的问题。参考下面的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Utils</span> </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">static</span> String <span class="title">format</span><span class="params">(String text)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> text.isEmpty() ? <span class="keyword">null</span> : text;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面的Java函数可能返回null也可能返回字符串，如果在Kotlin里调用这个函数的话，返回的是T!，如果不经处理直接val f:String = Utils.format(text)，就没有考虑到该方法可能会返回null，从而抛出了NPE。或者使用elvis运算符，当format返回null的时候设置返回值为一个空字符串；再或者使用”?.”实现安全调用，或者不指定f的变量类型，但是也会抛出NPE，当然可以使用Kotlin不建议的”!!”，声明f不为T?，但是还是会抛NPE。我觉得这个的确是Kotlin的问题，搞了个T!的平台类型，导致复杂化，但是我个人认为最佳实践是用elvis。希望在后面的版本里Kotlin能着手解决这个问题。</p>
+<h3 id="4-类的字面值-Class-literals"><a href="#4-类的字面值-Class-literals" class="headerlink" title="4.类的字面值(Class literals)"></a>4.类的字面值(Class literals)</h3><p>在Java里，可以直接通过CLASS.class获取字面值：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Gson gson = <span class="keyword">new</span> GsonBuilder().registerTypeAdapter(LocalDate.class, <span class="keyword">new</span> LocalDateAdapter()).create();</div></pre></td></tr></table></figure>
+<p>但是Kotlin里分了两种class，KClass与Class：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">val</span> kotlinClass : KClass&lt;LocalDate&gt; = LocalDate::<span class="class"><span class="keyword">class</span></span></div><div class="line"><span class="keyword">val</span> javaClass : Class&lt;LocalDate&gt; = LocalDate::<span class="class"><span class="keyword">class</span>.<span class="title">java</span></span></div></pre></td></tr></table></figure>
+<p>KClass是Kotlin特有的反射API，用kotlin-reflect的时候基本都是基于KClass的。虽然我看到有些资料说建议用Java反射之类的。不过Kotlin的这种字面值的确用起来较为繁琐。</p>
+<h3 id="5-相反位置的类型声明"><a href="#5-相反位置的类型声明" class="headerlink" title="5.相反位置的类型声明"></a>5.相反位置的类型声明</h3><p>Java里类型声明是放在变量前面的，但是Kotlin是放在变量后面中间还隔了个”:”，他们的意见是：1.为什么要把类型和变量隔开。 2.代码太长的时候（函数签名），函数的返回类型看起来不方便，需要拖动…如果函数签名里的参数一行一行地放，也不方便看返回类型。3.不方便命名变量名…他们想的是让IDE提示去快速书写变量名，但是Kotlin里只能自己手写。</p>
+<p>一个看返回类型不太直观的例子：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Bean</span></div><div class="line"><span class="function"><span class="keyword">fun</span> <span class="title">kafkaTemplate</span><span class="params">(</span></span></div><div class="line"><span class="function"><span class="params">        <span class="meta">@Value(<span class="meta-string">"\$&#123;interactions.kafka.bootstrap-servers-dc1&#125;"</span>)</span> bootstrapServersDc1: <span class="type">String</span>,</span></span></div><div class="line"><span class="function"><span class="params">        <span class="meta">@Value(<span class="meta-string">"\$&#123;interactions.kafka.bootstrap-servers-dc2&#125;"</span>)</span> bootstrapServersDc2: <span class="type">String</span>,</span></span></div><div class="line"><span class="function"><span class="params">        cloudMetadata: <span class="type">CloudMetadata</span>,</span></span></div><div class="line"><span class="function"><span class="params">        <span class="meta">@Value(<span class="meta-string">"\$&#123;interactions.kafka.batch-size&#125;"</span>)</span> batchSize: <span class="type">Int</span>,</span></span></div><div class="line"><span class="function"><span class="params">        <span class="meta">@Value(<span class="meta-string">"\$&#123;interactions.kafka.linger-ms&#125;"</span>)</span> lingerMs: <span class="type">Int</span>,</span></span></div><div class="line"><span class="function"><span class="params">        metricRegistry : <span class="type">MetricRegistry</span></span></span></div><div class="line"><span class="function"><span class="params">)</span></span>: KafkaTemplate&lt;String, ByteArray&gt; &#123;</div><div class="line"></div><div class="line">    <span class="keyword">val</span> bootstrapServer = <span class="keyword">if</span> (cloudMetadata.datacenter == <span class="string">"dc1"</span>) &#123;</div><div class="line">        bootstrapServersDc1</div><div class="line">    &#125;</div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>对于这点，我受影响不大，保留意见。我也基本没有因为Kotlin和Java的变量类型位置不同导致不便。</p>
+<h3 id="6-伴生对象"><a href="#6-伴生对象" class="headerlink" title="6.伴生对象"></a>6.伴生对象</h3><p>Kotlin里使用companion object实现”静态对象“，companion object的效果类似Java的static，但是并不是真正的静态对象，要使用真正的静态对象需要通过注解@JvmStatic来声明。他们遇到的问题似乎是Spring需要用”真正的静态对象“启动App：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">AppRunner</span> </span>&#123;</div><div class="line">    <span class="keyword">companion</span> <span class="keyword">object</span> &#123;</div><div class="line">        <span class="meta">@JvmStatic</span> <span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">(args: <span class="type">Array</span>&lt;<span class="type">String</span>&gt;)</span></span> &#123;</div><div class="line">            SpringApplication.run(AppRunner::<span class="class"><span class="keyword">class</span>.<span class="title">java</span>, <span class="type">*args)</span></span></div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>不过我个人认为难以判断好坏，因为Kotlin不需要另外声明一个Utils类再写静态方法，我只需要像Python一样直接在一个专门存放公共静态函数的kt文件里写一个全局的函数即可，静态与否意义不大。当然这个是看情况的，需要用Java的static还是要记得加注解。</p>
+<h3 id="7-生成collection"><a href="#7-生成collection" class="headerlink" title="7.生成collection"></a>7.生成collection</h3><p>他们觉得Kotlin的集合声明不太直观，的确，js、py里声明一个array或者list只需要一个[ ]就能搞定，生成一个object或者dict也是只要一个{ }，但是Kotlin里需要用些函数比如listOf()、mapOf()来生成list和map，而且map还是用”to”这种奇葩格式来区分键值对，这一点我倒是挺赞同他们的，为什么非得用些繁琐的手段生成数据？希望后面的迭代能改变这一点。</p>
+<h3 id="8-Optional值的缺失"><a href="#8-Optional值的缺失" class="headerlink" title="8.Optional值的缺失"></a>8.Optional值的缺失</h3><p>Java 8 开始，引入了Optional，意味着Stream可能无返回值也可能有返回，Java 8的lambda通过orElse()和ifPresent()处理Optional值。Kotlin则缺乏这方面的支持。我保留意见，从Python来的习惯，一条路走到黑：“当存在多种可能，不要尝试去猜测，而是尽量找一种，最好是唯一一种明显的解决方案”，用elvis就是一把梭（此处应有王守海表情包）！</p>
+<h3 id="9-数据类"><a href="#9-数据类" class="headerlink" title="9.数据类"></a>9.数据类</h3><p>他们认为数据类Data Class局限多，因为是final，无法继承，所以在某些场合不适用。但他们也承认没有更好的办法，只能手写equals之类的。</p>
+<h3 id="10-类默认是final的"><a href="#10-类默认是final的" class="headerlink" title="10.类默认是final的"></a>10.类默认是final的</h3><p>Kotlin里所有类默认都是final，想让它能继承需要加open修饰符，或者用一个插件kotlin-allopen。他们认为这是具有争议的，但是从我个人来看这没什么问题，只是写个open而已，而且想玩花样，代理模式、装饰器模式都是能用的…</p>
+<h3 id="11-陡峭的学习曲线"><a href="#11-陡峭的学习曲线" class="headerlink" title="11.陡峭的学习曲线"></a>11.陡峭的学习曲线</h3><p>这点…你们开心就好，我学习Kotlin也没花太长时间，要比学习曲线你干嘛不跟Scala比？当然相对Groovy的确需要些时间，但是我学它真的没花多久时间…而且我是学了Kotlin才正式、认真地学Java的。</p>
+<h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>当然，我写这篇东西并不是为了反驳他们，对于他们的工作环境、团队而言，Java 10可能是更好的选择，他们也是再三强调那篇东西并不是为了吹捧Java看衰Kotlin。对于我个人来说，自己做项目更多的还是会考虑Kotlin，毕竟写纯Java我是有点嫌弃的，虽然IDEA聪明得很，但是还是经常要按快捷键生成模板代码，而且我是从Python转过来的，Kotlin在某种程度来说比Java更让人有熟悉的感觉。btw，只有low逼会为了某个OS、技术而和别人争个你死我活，干活的人都是什么适合就用什么，不能赚钱、创造影响力有何意义？</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Kotlin/">Kotlin</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+  
     <article id="post-kotlinconstructor"  class="article article-type-post" itemscope itemprop="blogPost" >
   <div id="articleInner" class="article-inner">
     

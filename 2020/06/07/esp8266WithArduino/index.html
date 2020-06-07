@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>esp8266与arduino协同工作 | HOCHIKONG&#39;s WAPORIZer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="ESP8266" />
+  
+  
+  
+  
+  <meta name="description" content="介绍最近重新捡起了2016年买的Arduino套件开始玩，但是最近折腾ESP8266的时候遇到了一堆坑，非常难受，本文就从固件烧录开始介绍ESP如何与Arduino协作。 硬件介绍与开发环境介绍Arduino使用的是国产UNO，便宜好用，可能需要安装CH340的驱动才能正常烧录。ESP8266我使用的是安信可的ESP-01S，flash容量为8Mbit，自带两个GPIO，供电电压为3.3v，自带四">
+<meta name="keywords" content="ESP8266">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ESP8266与Arduino协同工作">
+<meta property="og:url" content="http://yoursite.com/2020/06/07/esp8266WithArduino/index.html">
+<meta property="og:site_name" content="HOCHIKONG&#39;s WAPORIZer">
+<meta property="og:description" content="介绍最近重新捡起了2016年买的Arduino套件开始玩，但是最近折腾ESP8266的时候遇到了一堆坑，非常难受，本文就从固件烧录开始介绍ESP如何与Arduino协作。 硬件介绍与开发环境介绍Arduino使用的是国产UNO，便宜好用，可能需要安装CH340的驱动才能正常烧录。ESP8266我使用的是安信可的ESP-01S，flash容量为8Mbit，自带两个GPIO，供电电压为3.3v，自带四">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/link1.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/link2.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/realterm.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/ATtest.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/gmr.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/downloadtool.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/download.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/pins.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/nlcr.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/net.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/tcp.png">
+<meta property="og:updated_time" content="2020-06-07T13:26:42.490Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ESP8266与Arduino协同工作">
+<meta name="twitter:description" content="介绍最近重新捡起了2016年买的Arduino套件开始玩，但是最近折腾ESP8266的时候遇到了一堆坑，非常难受，本文就从固件烧录开始介绍ESP如何与Arduino协作。 硬件介绍与开发环境介绍Arduino使用的是国产UNO，便宜好用，可能需要安装CH340的驱动才能正常烧录。ESP8266我使用的是安信可的ESP-01S，flash容量为8Mbit，自带两个GPIO，供电电压为3.3v，自带四">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/link1.png">
+  
+    <link rel="alternate" href="/atom.xml" title="HOCHIKONG&#39;s WAPORIZer" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/vapor3.jpg">
+  <link rel="apple-touch-icon" href="/css/images/vapor3.jpg">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/9749f0/00000000000000000001008f/27/l?subset_id=2&fvd=n5) format("woff2");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/90cf9f/000000000000000000010091/27/l?subset_id=2&fvd=n7) format("woff2");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/8a5494/000000000000000000013365/27/l?subset_id=2&fvd=n4) format("woff2");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/d337d8/000000000000000000010095/27/l?subset_id=2&fvd=i4) format("woff2");font-weight:400;font-style:italic;}</style>
+  <link rel="stylesheet" href="/css/style.css">
+
+  <script src="/js/jquery-3.1.1.min.js"></script>
+  <script src="/js/bootstrap.js"></script>
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    <link rel="stylesheet" href="/css/dialog.css">
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+    <link rel="stylesheet" href="/css/vdonate.css" >
+  
+
+</head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="
+                 margin-top: 0px;"  
+                href="#" data-toggle="modal" data-target="#myModal" >
+                  <img width="124px" height="124px" alt="Hike News" src="/css/images/vapor3.jpg">
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">首页</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">归档</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">分类</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">标签</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">关于</a> </li>
+                
+                  <li> <a class="main-nav-link" href="https://ckho.top">Service</a> </li>
+                
+                  <li> <a class="main-nav-link" href="http://h2q.weebly.com">Works</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="请输入关键词..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(无标题)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-esp8266WithArduino" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      ESP8266与Arduino协同工作
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2020/06/07/esp8266WithArduino/" class="article-date">
+	  <time datetime="2020-06-07T08:33:25.000Z" itemprop="datePublished">2020-06-07</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/日常折腾/">日常折腾</a>
+
+      
+	<a class="article-views">
+	<span id="busuanzi_container_page_pv">
+		阅读量<span id="busuanzi_value_page_pv"></span>
+	</span>
+	</a>
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>最近重新捡起了2016年买的Arduino套件开始玩，但是最近折腾ESP8266的时候遇到了一堆坑，非常难受，本文就从固件烧录开始介绍ESP如何与Arduino协作。</p>
+<h2 id="硬件介绍与开发环境介绍"><a href="#硬件介绍与开发环境介绍" class="headerlink" title="硬件介绍与开发环境介绍"></a>硬件介绍与开发环境介绍</h2><p>Arduino使用的是国产UNO，便宜好用，可能需要安装CH340的驱动才能正常烧录。ESP8266我使用的是安信可的ESP-01S，flash容量为8Mbit，自带两个GPIO，供电电压为3.3v，自带四个焊好的引脚方便接线，出厂已经自带AT固件。另外我还买了一个专门提供给ESP-01和ESP-01S的下载器，如图：</p>
+<p><img src="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/link1.png" alt=""></p>
+<p>开发环境使用的是VS Code+Platform IO，具体怎么用这里不会详细介绍，VS Code可以换为CLion，可以得到更好的编程体验。串口调试工具使用的是Realterm。TCP服务器使用的是网络调试助手。</p>
+<h2 id="硬件的初步测试"><a href="#硬件的初步测试" class="headerlink" title="硬件的初步测试"></a>硬件的初步测试</h2><p>把ESP-01S插入下载器，如图：</p>
+<p><img src="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/link2.png" alt=""></p>
+<p>然后插入电脑，打开Realterm，打开Port设置，把baud改为115200，这是出厂固件默认的设置，然后选择合适的端口，点击open和change，如下图：</p>
+<p><img src="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/realterm.png" alt=""></p>
+<p>然后切换到Send标签页，点击EOL的两个+CR和+LF，然后输入“AT”，点Send ASCII，会看到它返回OK，表示AT固件正常，如下图：</p>
+<p><img src="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/ATtest.png" alt=""></p>
+<p>输入“AT+GMR”能查看固件信息：</p>
+<p><img src="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/gmr.png" alt=""></p>
+<p>如果上述测试通过的话，就可以进一步测试其他AT指令。</p>
+<h2 id="ESP8266固件更新"><a href="#ESP8266固件更新" class="headerlink" title="ESP8266固件更新"></a>ESP8266固件更新</h2><p>如果通过AT+GMR查询到的固件版本太旧，可以手动烧录固件。首先参考这里<a href="http://wiki.ai-thinker.com/esp8266" target="_blank" rel="external">查询</a>你的硬件信息，然后在<a href="http://wiki.ai-thinker.com/esp_download" target="_blank" rel="external">这里</a>下载ESP FLASH TOOL，然后去这里下载你所需的<a href="http://wiki.ai-thinker.com/esp8266/sdk" target="_blank" rel="external">固件</a>，我用的是“出厂默认 AT 固件”。</p>
+<p>下载好工具和固件后解压，电脑插入安装好ESP-01S的下载器，打开烧录工具，选择“ESP8266 DownloadTool”，然后看到下图</p>
+<p><img src="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/downloadtool.png" alt=""></p>
+<p>直接点选“START”，会自动在DETECTED INFO那里显示硬件信息。然后参考下图设置烧录工具：</p>
+<p><img src="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/download.png" alt=""></p>
+<p>首先选择合适的固件，因为我的ESP-01S的flash是8Mbit，所以要选择包里对应的8Mbit固件，然后在后方的框填上“0x00000”。至于其他参数，就看图片里的设置。最后是烧录软件的port和baud都要设置好，一般的baud应该为1152000。</p>
+<p>设置好点击“START”就会自动烧录固件了，烧录完可以重复上一节的AT指令测试检查是否烧录成功。</p>
+<h2 id="与Arduino的协作"><a href="#与Arduino的协作" class="headerlink" title="与Arduino的协作"></a>与Arduino的协作</h2><p>与Arduino协作前最好先用下载器在电脑上改掉ESP-01S的默认波特率(baud)，可以输入指令”AT+UART_DEF=9600,8,1,0,0”修改。具体的指令描述和用法请去查乐鑫的AT指令手册。</p>
+<p>ESP8266本身就是一个MCU，可以用专用的SDK编程，在这个实验里，我只拿它当一个独立工作的wifi模块使用。ESP-01S的引脚参考下图：</p>
+<p><img src="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/pins.png" alt=""></p>
+<p>接线方式见下表：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Arduino</th>
+<th>ESP01s</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">GND</td>
+<td>GND</td>
+</tr>
+<tr>
+<td style="text-align:left">3.3v</td>
+<td>VCC</td>
+</tr>
+<tr>
+<td style="text-align:left">3.3v</td>
+<td>CH_PD</td>
+</tr>
+<tr>
+<td style="text-align:left">PIN 11（作为软RX）</td>
+<td>TX</td>
+</tr>
+<tr>
+<td style="text-align:left">PIN 10（作为软TX）</td>
+<td>RX</td>
+</tr>
+</tbody>
+</table>
+<p>建议UNO再加一个9v电池供电，因为上面的接线情况下直接通过USB下载程序兼供电会导致ESP-01S快速升温到烫手的程度，加上电池供电后温度上升就较为平缓也不那么烫手。如果使用NANO或者Pro这类小板，最好加一个扩展版双供电或者给ESP单独一个3.3v的外部电源。</p>
+<p>所依赖的库主要是SoftwareSerial，用platform.io的平台很容易下载，但是请注意不要下载了ESP版本的，ESP版本是为那些在ESP32或者8266上跑Arduino环境的人提供的，我手上的ESP-01S仅作为外部模块用AT指令控制，因此建议稍微注意一下这点。</p>
+<p>第一个程序代码（文件格式为cpp而非ino）如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;Arduino.h&gt;</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;SoftwareSerial.h&gt;</span></span></div><div class="line"></div><div class="line"><span class="function">SoftwareSerial <span class="title">esp8266</span><span class="params">(<span class="number">11</span>, <span class="number">10</span>)</span></span>;  <span class="comment">// parameters -&gt; receive, send</span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">setup</span><span class="params">()</span> </span>&#123;</div><div class="line">    Serial.begin(<span class="number">9600</span>);</div><div class="line">    Serial.println(<span class="string">"Arduino...OK"</span>);</div><div class="line">    esp8266.begin(<span class="number">9600</span>);</div><div class="line">    <span class="comment">// esp8266.write("AT+UART_DEF=9600,8,1,0,0\r\n");</span></div><div class="line">    delay(<span class="number">2500</span>);</div><div class="line">    <span class="comment">// esp8266.begin(9600);</span></div><div class="line">    Serial.println(<span class="string">"ESP8266...OK"</span>);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">loop</span><span class="params">()</span> </span>&#123;</div><div class="line">    <span class="keyword">if</span> (esp8266.available()) &#123;</div><div class="line">        Serial.write(esp8266.read());</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (Serial.available()) &#123;</div><div class="line">        esp8266.write(Serial.read());</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这个程序首先创建了软串口esp8266，并设置arduino的11号引脚为软RX，因为它对接ESP8266的TX，而10号引脚为软TX。这个程序被注释的那条AT指令是把ESP-01S的baud设置为9600而非默认的115200，因为SoftwareSerial在过高的baud下无法正常工作。本人推荐在接线前先用下载器在电脑用上述指令”AT+UART_DEF=9600, 8, 1, 0, 0”预先把baud设置为9600并保存到flash里。</p>
+<p>上面的程序启动后，可以用Arduino IDE的串口监视器或者Realterm测试。如果使用Arduino IDE，记得把换行符的NL和CR选上：</p>
+<p><img src="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/nlcr.png" alt=""></p>
+<p>然后就可以输入AT指令测试程序和接线有没有问题。如果输入AT指令并成功在串口监视器上显示对应的结果，那就可以尝试第二个程序，需要用到网络调试助手：</p>
+<p><img src="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/net.png" alt=""></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div><div class="line">129</div><div class="line">130</div><div class="line">131</div><div class="line">132</div><div class="line">133</div><div class="line">134</div><div class="line">135</div><div class="line">136</div><div class="line">137</div><div class="line">138</div><div class="line">139</div><div class="line">140</div><div class="line">141</div><div class="line">142</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;Arduino.h&gt;</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;SoftwareSerial.h&gt;</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> WIFI_SSID <span class="meta-string">"REPLACE ME!!!"</span>   <span class="comment">//WIFI SSID</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> WIFI_PASS <span class="meta-string">"REPLACE ME!!!"</span> <span class="comment">// Wifi Password</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> SERVER_IP <span class="meta-string">"REPLACE ME!!!"</span>  <span class="comment">// IP of the target server.</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> TIMEOUT 5000               <span class="comment">//Timeout for the serial communication</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> CONTINUE false</span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> HALT true</span></div><div class="line"><span class="meta">#<span class="meta-keyword">define</span> NO_OF_PARAMETERS 1 <span class="comment">//No of parameters sending to the server.</span></span></div><div class="line"></div><div class="line"><span class="function">SoftwareSerial <span class="title">esp8266SerialPort</span><span class="params">(<span class="number">11</span>, <span class="number">10</span>)</span></span>; <span class="comment">// RX, TX, 这里的arduino 11是连接到ESP的TX，arduino 12连接到ESP的RX</span></div><div class="line"></div><div class="line"><span class="function">boolean <span class="title">readResponseData</span><span class="params">(String keyword)</span></span></div><div class="line"><span class="function"></span>&#123; <span class="comment">//Receive data from the serial port. Returns true if keyword matches.</span></div><div class="line">    String response;</div><div class="line">    <span class="keyword">long</span> deadline = millis() + TIMEOUT;</div><div class="line">    <span class="keyword">while</span> (<span class="keyword">long</span>(millis()) &lt; deadline)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">if</span> (esp8266SerialPort.available())</div><div class="line">        &#123;</div><div class="line">            <span class="keyword">char</span> ch = esp8266SerialPort.read(); <span class="comment">// Read one character from serial port and append to a string.</span></div><div class="line">            response += ch;</div><div class="line">            <span class="keyword">if</span> (keyword != <span class="string">""</span>)</div><div class="line">            &#123;</div><div class="line">                <span class="keyword">if</span> (response.indexOf(keyword) &gt; <span class="number">0</span>) <span class="comment">// 找到keyword</span></div><div class="line">                &#123;                                  <span class="comment">//Searched keyword found.</span></div><div class="line">                    Serial.println(response);</div><div class="line">                    <span class="keyword">return</span> <span class="literal">true</span>;</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    Serial.println(response);</div><div class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">exception</span><span class="params">(String msg)</span></span></div><div class="line"><span class="function"></span>&#123; <span class="comment">//Exception occured. Print msg and stops.</span></div><div class="line">    Serial.println(msg);</div><div class="line">    Serial.println(<span class="string">"HALT"</span>);</div><div class="line">    <span class="keyword">while</span> (<span class="literal">true</span>)</div><div class="line">    &#123;</div><div class="line">        readResponseData(<span class="string">""</span>);</div><div class="line">        delay(<span class="number">60000</span>);</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function">boolean <span class="title">sendCommand</span><span class="params">(String command, String acknowledgement, boolean stopOnError)</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">    esp8266SerialPort.println(command);</div><div class="line">    <span class="keyword">if</span> (!readResponseData(acknowledgement))</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">if</span> (stopOnError)</div><div class="line">        &#123;</div><div class="line">            Serial.println(command + <span class="string">" Failed to execute."</span>);</div><div class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">else</span></div><div class="line">        &#123;</div><div class="line">            <span class="keyword">return</span> <span class="literal">false</span>; <span class="comment">// Let the caller handle it.</span></div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">else</span></div><div class="line">    &#123;</div><div class="line">        <span class="keyword">return</span> <span class="literal">true</span>; <span class="comment">// ack blank or ack found</span></div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function">boolean <span class="title">initializeESP8266Module</span><span class="params">()</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">    esp8266SerialPort.begin(<span class="number">9600</span>);</div><div class="line">    esp8266SerialPort.setTimeout(TIMEOUT); <span class="comment">// 等待串口数据的时间</span></div><div class="line">    delay(<span class="number">2000</span>);</div><div class="line"></div><div class="line">    <span class="comment">//sendCommand("AT+RST", "ready", HALT);    // Reset &amp; test if the module is ready</span></div><div class="line">    sendCommand(<span class="string">"AT+GMR"</span>, <span class="string">"OK"</span>, CONTINUE);     <span class="comment">// Retrieves the firmware ID (version number) of the module.</span></div><div class="line">    sendCommand(<span class="string">"AT+CWMODE?"</span>, <span class="string">"OK"</span>, CONTINUE); <span class="comment">// Get module access mode.</span></div><div class="line">    sendCommand(<span class="string">"AT+CWMODE=1"</span>, <span class="string">"OK"</span>, HALT);    <span class="comment">// Station mode</span></div><div class="line">    <span class="comment">// sendCommand("AT+CIPMUX=1", "OK", HALT);    // Allow multiple connections (we'll only use the first).</span></div><div class="line"></div><div class="line">    String cmd = <span class="string">"AT+CWJAP=\""</span>; <span class="comment">// 连接wifi</span></div><div class="line">    cmd += WIFI_SSID;</div><div class="line">    cmd += <span class="string">"\",\""</span>;</div><div class="line">    cmd += WIFI_PASS;</div><div class="line">    cmd += <span class="string">"\""</span>;</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> counter = <span class="number">0</span>; counter &lt; <span class="number">5</span>; counter++)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">if</span> (sendCommand(cmd, <span class="string">"OK"</span>, CONTINUE))</div><div class="line">        &#123; <span class="comment">// Join Access Point</span></div><div class="line">            Serial.println(<span class="string">"Connected to WiFi."</span>);</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (counter == <span class="number">4</span>)</div><div class="line">            exception(<span class="string">"Connection to Wi-Fi failed. Please Check"</span>);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    delay(<span class="number">5000</span>);</div><div class="line"></div><div class="line">    sendCommand(<span class="string">"AT+CWSAP=?"</span>, <span class="string">"OK"</span>, CONTINUE); <span class="comment">// Test connection</span></div><div class="line">    sendCommand(<span class="string">"AT+CIFSR"</span>, <span class="string">"OK"</span>, HALT);       <span class="comment">// Echo IP address. (Firmware bug - should return "OK".)</span></div><div class="line">    <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">setup</span><span class="params">()</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">    Serial.begin(<span class="number">9600</span>);</div><div class="line">    Serial.println(<span class="string">"ESP8266 Demo"</span>);</div><div class="line">    initializeESP8266Module();</div><div class="line">    Serial.println(<span class="string">"Module is ready."</span>);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">loop</span><span class="params">()</span></span></div><div class="line"><span class="function"></span>&#123;</div><div class="line">    <span class="comment">// 建立单连接TCP链接 AT+CIPSTART="TCP","192.XXX.XXX.XXX","50XX"</span></div><div class="line">    String cmd = <span class="string">"AT+CIPSTART=\"TCP\",\""</span>;</div><div class="line">    cmd += SERVER_IP;</div><div class="line">    cmd += <span class="string">"\",5088"</span>; <span class="comment">//Start a TCP connection.  to server SERVER_IP on port 80</span></div><div class="line">    <span class="keyword">if</span> (!sendCommand(cmd, <span class="string">"OK"</span>, CONTINUE))</div><div class="line">        <span class="keyword">return</span>;</div><div class="line">    delay(<span class="number">2000</span>);</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (!sendCommand(<span class="string">"AT+CIPSTATUS"</span>, <span class="string">"OK"</span>, CONTINUE)) <span class="comment">// Check for TCP Connection status.</span></div><div class="line">        <span class="keyword">return</span>;</div><div class="line"></div><div class="line">    <span class="comment">// 进入发送模式</span></div><div class="line">    String content = <span class="string">"NMSL"</span>;</div><div class="line">    String request = <span class="string">"AT+CIPSEND="</span> + String(content.length());</div><div class="line">    <span class="keyword">if</span> (!sendCommand(request, <span class="string">"&gt;"</span>, CONTINUE))</div><div class="line">    &#123;</div><div class="line">        <span class="comment">// 当发送指令失败时</span></div><div class="line">        sendCommand(<span class="string">"AT+CIPCLOSE"</span>, <span class="string">""</span>, CONTINUE);</div><div class="line">        Serial.println(<span class="string">"Connection timeout."</span>);</div><div class="line">        <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="comment">// send content</span></div><div class="line">    sendCommand(content, <span class="string">"OK"</span>, CONTINUE);</div><div class="line">    <span class="comment">// close TCP</span></div><div class="line">    sendCommand(<span class="string">"AT+CIPCLOSE"</span>, <span class="string">"OK"</span>, CONTINUE);</div><div class="line"></div><div class="line">    exception(<span class="string">"ONCE ONLY"</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>烧录完成后，打开串口监视器和网络调试助手并启动服务，再启动Arduino。如果接线和其他一切正常，就会在串口打印一堆信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div></pre></td><td class="code"><pre><div class="line">ESP8266 Demo</div><div class="line">AT+GMR</div><div class="line"></div><div class="line">AT version:1.2.0.0(Jul  1 2016 20:04:45)</div><div class="line">SDK version:1.5.4.1(39cb9a32)</div><div class="line">Ai-Thinker TeogC .v51   75:</div><div class="line"></div><div class="line"></div><div class="line">AT+CWMODE?</div><div class="line"></div><div class="line">+CWMODE:1</div><div class="line"></div><div class="line">OK</div><div class="line"></div><div class="line">AT+CWMODE=1</div><div class="line"></div><div class="line"></div><div class="line">OK</div><div class="line">xxx</div><div class="line">AT+CWJAP=&quot;xxx&quot;,&quot;xxx&quot;</div><div class="line"></div><div class="line">WIFI DISCONNECT</div><div class="line">WIFI CONNECTED</div><div class="line"></div><div class="line">WIFI GOT I</div><div class="line">ATCWJAP&quot;xxx&quot;,&quot;xxx&quot;</div><div class="line"></div><div class="line">busy p...</div><div class="line"></div><div class="line">OK</div><div class="line">Connected to WiFi.</div><div class="line"></div><div class="line">AT+CWSAP=?</div><div class="line"></div><div class="line"></div><div class="line">ERROR</div><div class="line"></div><div class="line">AT+CIFSR</div><div class="line"></div><div class="line">+CIFSR:STAIP,&quot;192.168.2.173&quot;</div><div class="line">+CIFSR:STAMAC,&quot;18:fe:34:d1:d6:bd&quot;</div><div class="line"></div><div class="line">OK</div><div class="line">Module is ready.</div><div class="line"></div><div class="line">AT+CIPSTART=&quot;TCP&quot;,&quot;192.168.2.166&quot;,5088</div><div class="line"></div><div class="line">CONNECT</div><div class="line"></div><div class="line">OK</div><div class="line"></div><div class="line">AT+CIPSTATUS</div><div class="line"></div><div class="line">STATUS:3</div><div class="line">+CIPSTATUS:0,&quot;TCP&quot;,&quot;192.168.2.166&quot;,5088,14009,0</div><div class="line"></div><div class="line">OK</div><div class="line"></div><div class="line">AT+CIPSEND=8</div><div class="line"></div><div class="line"></div><div class="line">OK</div><div class="line">&gt;</div><div class="line"> </div><div class="line"></div><div class="line">busy s...</div><div class="line"></div><div class="line">Recv 8 bytes</div><div class="line"></div><div class="line">SEND OK</div><div class="line"></div><div class="line">AT+CIPCLOSE</div><div class="line"></div><div class="line">CLOSED</div><div class="line"></div><div class="line">OK</div><div class="line">ONCE ONLY</div><div class="line">HALT</div></pre></td></tr></table></figure>
+<p>网络调试助手会输出相关信息：</p>
+<p><img src="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200607/tcp.png" alt=""></p>
+<p>至此，Arduino通过AT指令操作esp8266的实验就结束了。</p>
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p>如果直接用下载器进入AT模式，连wifi掉线，可能是设置为AP模式或者没有启用DHCP，具体的AT指令可以参考乐鑫官网的AT指令手册和范例手册。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        <div id="donation_div"></div>
+
+<script src="/js/vdonate.js"></script>
+<script>
+var a = new Donate({
+  title: '如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作!', // 可选参数，打赏标题
+  btnText: '打赏支持', // 可选参数，打赏按钮文字
+  el: document.getElementById('donation_div'),
+  wechatImage: 'https://github.com/Hochikong/ckho-photolib/raw/master/donate/donateWechat.jpg',
+  alipayImage: 'https://github.com/Hochikong/ckho-photolib/blob/master/donate/donateWechat.jpg'
+});
+</script>
+      
+      
+        
+	<div id="comment">
+		<!-- 来必力City版安装代码 -->
+		<div id="lv-container" data-id="city" data-uid="MTAyMC8zMTQzNy84MDAx">
+		<script type="text/javascript">
+		   (function(d, s) {
+		       var j, e = d.getElementsByTagName(s)[0];
+
+		       if (typeof LivereTower === 'function') { return; }
+
+		       j = d.createElement(s);
+		       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+		       j.async = true;
+
+		       e.parentNode.insertBefore(j, e);
+		   })(document, 'script');
+		</script>
+		<noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+		</div>
+		<!-- City版安装代码已完成 -->
+	</div>
+
+
+
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ESP8266/">ESP8266</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2019/10/17/recursivecte/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">Recursive CTE解析</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#介绍"><span class="nav-number">1.</span> <span class="nav-text">介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#硬件介绍与开发环境介绍"><span class="nav-number">1.1.</span> <span class="nav-text">硬件介绍与开发环境介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#硬件的初步测试"><span class="nav-number">1.2.</span> <span class="nav-text">硬件的初步测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ESP8266固件更新"><span class="nav-number">1.3.</span> <span class="nav-text">ESP8266固件更新</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#与Arduino的协作"><span class="nav-number">1.4.</span> <span class="nav-text">与Arduino的协作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其他"><span class="nav-number">1.5.</span> <span class="nav-text">其他</span></a></li></ol></li></ol>
+    
+    </div>
+  </aside>
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2017 - 2020 HOCHIKONG&#39;s WAPORIZer All Rights Reserved.</p>
+	      
+	      
+    		<p class="busuanzi_uv">
+				访客数 : <span id="busuanzi_value_site_uv"></span> |  
+				访问量 : <span id="busuanzi_value_site_pv"></span>
+		    </p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+    <a href="https://ckho.top" class="mobile-nav-link">Service</a>
+  
+    <a href="http://h2q.weebly.com" class="mobile-nav-link">Works</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+  <script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+	<div style="display: none;">
+    <script src="https://s95.cnzz.com/z_stat.php?id=1260716016&web_id=1260716016" language="JavaScript"></script>
+  </div>
+
+
+
+	<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+	</script>
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            HOCHIKONG&#39;s WAPORIZer
+          </div>
+          <div class="panel-body">
+            Copyright © 2020 Hochikong All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>
