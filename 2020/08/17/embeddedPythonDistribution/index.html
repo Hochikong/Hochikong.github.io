@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>python程序的最佳分发方式与实践 | HOCHIKONG&#39;s WAPORIZer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="python" />
+  
+  
+  
+  
+  <meta name="description" content="Python程序分发Python是一个脚本语言，程序运行时需要依赖Python解释器，并且要安装相应的依赖库。对于我这种Python用户来说自然不是什么大问题，一个pip就完事了。但是如果是分发给其他windows用户，尤其是不熟悉Python的人来说，这样实在太麻烦。因此最好的办法是连同python解释器和python程序打包在一起，通过inno setup一次安装解决问题。 嵌入式Python">
+<meta name="keywords" content="python">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python程序的最佳分发方式与实践">
+<meta property="og:url" content="http://yoursite.com/2020/08/17/embeddedPythonDistribution/index.html">
+<meta property="og:site_name" content="HOCHIKONG&#39;s WAPORIZer">
+<meta property="og:description" content="Python程序分发Python是一个脚本语言，程序运行时需要依赖Python解释器，并且要安装相应的依赖库。对于我这种Python用户来说自然不是什么大问题，一个pip就完事了。但是如果是分发给其他windows用户，尤其是不熟悉Python的人来说，这样实在太麻烦。因此最好的办法是连同python解释器和python程序打包在一起，通过inno setup一次安装解决问题。 嵌入式Python">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200817/scripts.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200817/hex0.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200817/hex1.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200817/inno%20wiz.png">
+<meta property="og:updated_time" content="2020-08-17T09:24:54.396Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Python程序的最佳分发方式与实践">
+<meta name="twitter:description" content="Python程序分发Python是一个脚本语言，程序运行时需要依赖Python解释器，并且要安装相应的依赖库。对于我这种Python用户来说自然不是什么大问题，一个pip就完事了。但是如果是分发给其他windows用户，尤其是不熟悉Python的人来说，这样实在太麻烦。因此最好的办法是连同python解释器和python程序打包在一起，通过inno setup一次安装解决问题。 嵌入式Python">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200817/scripts.png">
+  
+    <link rel="alternate" href="/atom.xml" title="HOCHIKONG&#39;s WAPORIZer" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/vapor3.jpg">
+  <link rel="apple-touch-icon" href="/css/images/vapor3.jpg">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/9749f0/00000000000000000001008f/27/l?subset_id=2&fvd=n5) format("woff2");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/90cf9f/000000000000000000010091/27/l?subset_id=2&fvd=n7) format("woff2");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/8a5494/000000000000000000013365/27/l?subset_id=2&fvd=n4) format("woff2");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/d337d8/000000000000000000010095/27/l?subset_id=2&fvd=i4) format("woff2");font-weight:400;font-style:italic;}</style>
+  <link rel="stylesheet" href="/css/style.css">
+
+  <script src="/js/jquery-3.1.1.min.js"></script>
+  <script src="/js/bootstrap.js"></script>
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    <link rel="stylesheet" href="/css/dialog.css">
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+    <link rel="stylesheet" href="/css/vdonate.css" >
+  
+
+</head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="
+                 margin-top: 0px;"  
+                href="#" data-toggle="modal" data-target="#myModal" >
+                  <img width="124px" height="124px" alt="Hike News" src="/css/images/vapor3.jpg">
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">首页</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">归档</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">分类</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">标签</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">关于</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/">Service</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/">Works</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="请输入关键词..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(无标题)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-embeddedPythonDistribution" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      Python程序的最佳分发方式与实践
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2020/08/17/embeddedPythonDistribution/" class="article-date">
+	  <time datetime="2020-08-17T08:25:50.000Z" itemprop="datePublished">2020-08-17</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/自编软件/">自编软件</a>
+
+      
+	<a class="article-views">
+	<span id="busuanzi_container_page_pv">
+		阅读量<span id="busuanzi_value_page_pv"></span>
+	</span>
+	</a>
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Python程序分发"><a href="#Python程序分发" class="headerlink" title="Python程序分发"></a>Python程序分发</h1><p>Python是一个脚本语言，程序运行时需要依赖Python解释器，并且要安装相应的依赖库。对于我这种Python用户来说自然不是什么大问题，一个pip就完事了。但是如果是分发给其他windows用户，尤其是不熟悉Python的人来说，这样实在太麻烦。因此最好的办法是连同python解释器和python程序打包在一起，通过inno setup一次安装解决问题。</p>
+<h1 id="嵌入式Python处理"><a href="#嵌入式Python处理" class="headerlink" title="嵌入式Python处理"></a>嵌入式Python处理</h1><p>此嵌入式不是硬件的嵌入式，而是Python官方提供的免安装版解释器，可以从这里下载所需的版本：<a href="https://www.python.org/downloads/windows/" target="_blank" rel="external">Python for Windows</a>。</p>
+<p>注意要下载embeddable的版本，不然无法用于制作安装程序。</p>
+<p>下载完免安装版本后解压即可，然后从<a href="https://pip.pypa.io/en/stable/installing/" target="_blank" rel="external">这里</a>下载pip的get-pip.py放入解压的目录中，用cmd执行：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">python.exe get-pip.py</div></pre></td></tr></table></figure>
+<p>安装完会在根目录下生成Scripts子目录，用于存储安装后生成的exe：</p>
+<p><img src="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200817/scripts.png" alt="Scripts目录"></p>
+<p>安装完pip就可以安装所需的依赖库和主程序了，以我的<a href="https://github.com/Hochikong/DoujinshiCollectorFramework" target="_blank" rel="external">同人志爬虫框架</a>为例子，安装完后会在Scripts生成djsc.exe（见上图）。这样程序就部署完毕了。</p>
+<p>但是目前的python整合包尚不能用于分发，因为pip在安装这些会生成exe的程序时会把python解释器的路径写死在这些exe中，需要手动删除那些绝对路径的内容，只保留python.exe：</p>
+<p><img src="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200817/hex0.png" alt="删除前"></p>
+<p><img src="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200817/hex1.png" alt="删除后"></p>
+<h1 id="制作Windows安装程序"><a href="#制作Windows安装程序" class="headerlink" title="制作Windows安装程序"></a>制作Windows安装程序</h1><p>在删除解释器的绝对路径之后，就可以用inno setup创建安装包，我建议用inno setup的QuickStart Pack，会自动安装Inno Script Studio，体验很好。下面是我的脚本文件（djscf.iss）：</p>
+<figure class="highlight pascal"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div></pre></td><td class="code"><pre><div class="line">; Script generated by the Inno Script Studio Wizard.</div><div class="line">; SEE THE DOCUMENTATION <span class="keyword">FOR</span> DETAILS <span class="keyword">ON</span> CREATING INNO SETUP SCRIPT FILES!</div><div class="line"></div><div class="line">#define MyAppName "DJSCF"</div><div class="line">#define MyAppVersion "0.0.3.2"</div><div class="line">#define MyAppPublisher "Hochikong"</div><div class="line">#define MyAppURL "https://github.com/Hochikong/DoujinshiCollectorFramework"</div><div class="line">#define MyAppExeName "Scripts\djsc.exe"</div><div class="line"></div><div class="line">[Setup]</div><div class="line">; NOTE: The value <span class="keyword">of</span> AppId uniquely identifies this application.</div><div class="line">; <span class="keyword">Do</span> <span class="keyword">not</span> use the same AppId value <span class="keyword">in</span> installers <span class="keyword">for</span> other applications.</div><div class="line">; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)</div><div class="line">AppId=<span class="comment">&#123;&#123;53AC6536-1651-4A86-AB6B-69583B96FA78&#125;</span></div><div class="line">AppName=<span class="comment">&#123;#MyAppName&#125;</span></div><div class="line">AppVersion=<span class="comment">&#123;#MyAppVersion&#125;</span></div><div class="line">;AppVerName=<span class="comment">&#123;#MyAppName&#125;</span> <span class="comment">&#123;#MyAppVersion&#125;</span></div><div class="line">AppPublisher=<span class="comment">&#123;#MyAppPublisher&#125;</span></div><div class="line">AppPublisherURL=<span class="comment">&#123;#MyAppURL&#125;</span></div><div class="line">AppSupportURL=<span class="comment">&#123;#MyAppURL&#125;</span></div><div class="line">AppUpdatesURL=<span class="comment">&#123;#MyAppURL&#125;</span></div><div class="line">DefaultDirName=<span class="comment">&#123;pf&#125;</span>\<span class="comment">&#123;#MyAppName&#125;</span></div><div class="line">DefaultGroupName=<span class="comment">&#123;#MyAppName&#125;</span></div><div class="line">AllowNoIcons=yes</div><div class="line">LicenseFile=C:\Users\ckhoi\Desktop\DJSCFramework\LICENSE.txt</div><div class="line">InfoAfterFile=C:\Users\ckhoi\Desktop\DJSCFramework\README.txt</div><div class="line">OutputDir=C:\Users\ckhoi\Desktop</div><div class="line">OutputBaseFilename=djscForWindows-v0.<span class="number">0.3</span>.<span class="number">2</span>-setup</div><div class="line">Compression=lzma</div><div class="line">SolidCompression=yes</div><div class="line"></div><div class="line">[Code]</div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">NeedsAddPath</span><span class="params">(Param: <span class="keyword">string</span>)</span>:</span> boolean;</div><div class="line"><span class="keyword">var</span></div><div class="line">  OrigPath: <span class="keyword">string</span>;</div><div class="line"><span class="keyword">begin</span></div><div class="line">  <span class="keyword">if</span> <span class="keyword">not</span> RegQueryStringValue(HKEY_LOCAL_MACHINE,</div><div class="line">    <span class="string">'SYSTEM\CurrentControlSet\Control\Session Manager\Environment'</span>,</div><div class="line">    <span class="string">'Path'</span>, OrigPath)</div><div class="line">  <span class="keyword">then</span> <span class="keyword">begin</span></div><div class="line">    Result := True;</div><div class="line">    <span class="keyword">exit</span>;</div><div class="line">  <span class="keyword">end</span>;</div><div class="line">  <span class="comment">&#123; look for the path with leading and trailing semicolon &#125;</span></div><div class="line">  <span class="comment">&#123; Pos() returns 0 if not found &#125;</span></div><div class="line">  Result := Pos(<span class="string">';'</span> + Param + <span class="string">';'</span>, <span class="string">';'</span> + OrigPath + <span class="string">';'</span>) = <span class="number">0</span>;</div><div class="line"><span class="keyword">end</span>;</div><div class="line"></div><div class="line">[Languages]</div><div class="line">Name: "english"; MessagesFile: "compiler:Default.isl"</div><div class="line">Name: "chinesesimplified"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"</div><div class="line"></div><div class="line">[Tasks]</div><div class="line">Name: "desktopicon"; Description: "&#123;cm:CreateDesktopIcon&#125;"; GroupDescription: "&#123;cm:AdditionalIcons&#125;"; Flags: unchecked</div><div class="line">Name: "quicklaunchicon"; Description: "&#123;cm:CreateQuickLaunchIcon&#125;"; GroupDescription: "&#123;cm:AdditionalIcons&#125;"; Flags: unchecked; OnlyBelowVersion: 0,6.1</div><div class="line"></div><div class="line">[Files]</div><div class="line">Source: "C:\Users\ckhoi\Desktop\DJSCFramework\*"; DestDir: "&#123;app&#125;"; Flags: ignoreversion recursesubdirs createallsubdirs</div><div class="line">; NOTE: Don<span class="string">'t use "Flags: ignoreversion" on any shared system files</span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">[Icons]</span></div><div class="line"><span class="string">Name: "&#123;group&#125;\&#123;#MyAppName&#125;"; Filename: "&#123;app&#125;\&#123;#MyAppExeName&#125;"</span></div><div class="line"><span class="string">Name: "&#123;group&#125;\&#123;cm:ProgramOnTheWeb,&#123;#MyAppName&#125;&#125;"; Filename: "&#123;#MyAppURL&#125;"</span></div><div class="line"><span class="string">Name: "&#123;group&#125;\&#123;cm:UninstallProgram,&#123;#MyAppName&#125;&#125;"; Filename: "&#123;uninstallexe&#125;"</span></div><div class="line"><span class="string">Name: "&#123;group&#125;\打开配置文件"; Filename: "&#123;app&#125;\Scripts\config.ini"</span></div><div class="line"><span class="string">Name: "&#123;commondesktop&#125;\&#123;#MyAppName&#125;"; Filename: "&#123;app&#125;\&#123;#MyAppExeName&#125;"; Tasks: desktopicon</span></div><div class="line"><span class="string">Name: "&#123;userappdata&#125;\Microsoft\Internet Explorer\Quick Launch\&#123;#MyAppName&#125;"; Filename: "&#123;app&#125;\&#123;#MyAppExeName&#125;"; Tasks: quicklaunchicon</span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">[Setup]</span></div><div class="line"><span class="string">AlwaysRestart = yes</span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">[Run]</span></div><div class="line"><span class="string">Filename: "&#123;app&#125;\&#123;#MyAppExeName&#125;"; Description: "&#123;cm:LaunchProgram,&#123;#StringChange(MyAppName, '</span>&amp;<span class="string">', '</span>&amp;&amp;<span class="string">')&#125;&#125;"; Flags: nowait postinstall skipifsilent</span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">[Registry]</span></div><div class="line"><span class="string">Root: "HKLM";Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment";ValueType: expandsz;ValueName: "Path";ValueData: "&#123;olddata&#125;;&#123;app&#125;";Check: NeedsAddPath('</span><span class="comment">&#123;app&#125;</span><span class="string">')</span></div></pre></td></tr></table></figure>
+<p>其中最重要的几点如下：</p>
+<ul>
+<li><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">#define MyAppExeName "Scripts\djsc.exe"</div></pre></td></tr></table></figure>
+<p>在用ISS的向导程序创建脚本时会让你填写主程序的路径，如下图：</p>
+<p><img src="https://raw.githubusercontent.com/Hochikong/ckho-photolib/master/20200817/inno%20wiz.png" alt="向导程序"></p>
+<p>但是我们的exe是在嵌入式python目录的子目录Scripts中，如果在向导中直接设置主程序为djsc.exe并没有修改上面的脚本的话，就会导致封包出来的安装程序在安装完会把djsc.exe从Scripts目录中提取到根目录并为它生成开始菜单快捷方式。</p>
+<p>为了解决这个问题最好的办法是直接修改MyAppExeName，前面加上子目录。</p>
+</li>
+<li><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">[Code]</div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">NeedsAddPath</span><span class="params">(Param: <span class="keyword">string</span>)</span>:</span> boolean;</div><div class="line"><span class="keyword">var</span></div><div class="line">  OrigPath: <span class="keyword">string</span>;</div><div class="line"><span class="keyword">begin</span></div><div class="line">  <span class="keyword">if</span> <span class="keyword">not</span> RegQueryStringValue(HKEY_LOCAL_MACHINE,</div><div class="line">    <span class="string">'SYSTEM\CurrentControlSet\Control\Session Manager\Environment'</span>,</div><div class="line">    <span class="string">'Path'</span>, OrigPath)</div><div class="line">  <span class="keyword">then</span> <span class="keyword">begin</span></div><div class="line">    Result := True;</div><div class="line">    <span class="keyword">exit</span>;</div><div class="line">  <span class="keyword">end</span>;</div><div class="line">  <span class="comment">&#123; look for the path with leading and trailing semicolon &#125;</span></div><div class="line">  <span class="comment">&#123; Pos() returns 0 if not found &#125;</span></div><div class="line">  Result := Pos(<span class="string">';'</span> + Param + <span class="string">';'</span>, <span class="string">';'</span> + OrigPath + <span class="string">';'</span>) = <span class="number">0</span>;</div><div class="line"><span class="keyword">end</span>;</div><div class="line"></div><div class="line">[Registry]</div><div class="line">Root: "HKLM";Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment";ValueType: expandsz;ValueName: "Path";ValueData: "&#123;olddata&#125;;&#123;app&#125;";Check: NeedsAddPath('&#123;app&#125;')</div></pre></td></tr></table></figure>
+<p>上面的代码是用于安装时在PATH中写入安装路径，安装路径即’{app}’。把安装路径写入Path就可以直接在cmd中调用python。但是用户在安装完并不能直接使用，还需要下面的代码。</p>
+</li>
+<li><figure class="highlight pascal"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[Setup]</div><div class="line">AlwaysRestart = yes</div></pre></td></tr></table></figure>
+<p>上面的代码可以让用户选择是否重启计算机，重启后就可以正常使用djsc.exe了。</p>
+</li>
+<li><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Name: "&#123;group&#125;\打开配置文件"; Filename: "&#123;app&#125;\Scripts\config.ini"</div></pre></td></tr></table></figure>
+<p>这个代码可以把配置文件的快捷方式一并加入开始菜单，免得用户手动打开目录编辑。</p>
+</li>
+</ul>
+<h1 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h1><p>通过上面的实践，就可以把python程序和解释器、依赖库一并打包分发给非专业用户，尤其是pyqt程序。如果依赖库使用了numpy等库，pyinstaller经常会打包失败，但是这样打包成安装包就提高了用户的使用体验。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        <div id="donation_div"></div>
+
+<script src="/js/vdonate.js"></script>
+<script>
+var a = new Donate({
+  title: '如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作!', // 可选参数，打赏标题
+  btnText: '打赏支持', // 可选参数，打赏按钮文字
+  el: document.getElementById('donation_div'),
+  wechatImage: 'https://github.com/Hochikong/ckho-photolib/raw/master/donate/donateWechat.jpg',
+  alipayImage: 'https://github.com/Hochikong/ckho-photolib/blob/master/donate/donateWechat.jpg'
+});
+</script>
+      
+      
+        
+	<div id="comment">
+		<!-- 来必力City版安装代码 -->
+		<div id="lv-container" data-id="city" data-uid="MTAyMC8zMTQzNy84MDAx">
+		<script type="text/javascript">
+		   (function(d, s) {
+		       var j, e = d.getElementsByTagName(s)[0];
+
+		       if (typeof LivereTower === 'function') { return; }
+
+		       j = d.createElement(s);
+		       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+		       j.async = true;
+
+		       e.parentNode.insertBefore(j, e);
+		   })(document, 'script');
+		</script>
+		<noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+		</div>
+		<!-- City版安装代码已完成 -->
+	</div>
+
+
+
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/">python</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2020/06/07/esp8266WithArduino/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">ESP8266与Arduino协同工作</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Python程序分发"><span class="nav-number">1.</span> <span class="nav-text">Python程序分发</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#嵌入式Python处理"><span class="nav-number">2.</span> <span class="nav-text">嵌入式Python处理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#制作Windows安装程序"><span class="nav-number">3.</span> <span class="nav-text">制作Windows安装程序</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#结语"><span class="nav-number">4.</span> <span class="nav-text">结语</span></a></li></ol>
+    
+    </div>
+  </aside>
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2017 - 2020 HOCHIKONG&#39;s WAPORIZer All Rights Reserved.</p>
+	      
+	      
+    		<p class="busuanzi_uv">
+				访客数 : <span id="busuanzi_value_site_uv"></span> |  
+				访问量 : <span id="busuanzi_value_site_pv"></span>
+		    </p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+    <a href="/" class="mobile-nav-link">Service</a>
+  
+    <a href="/" class="mobile-nav-link">Works</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+  <script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+	<div style="display: none;">
+    <script src="https://s95.cnzz.com/z_stat.php?id=1260716016&web_id=1260716016" language="JavaScript"></script>
+  </div>
+
+
+
+	<script async src="////busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js">
+	</script>
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            HOCHIKONG&#39;s WAPORIZer
+          </div>
+          <div class="panel-body">
+            Copyright © 2020 Hochikong All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>
