@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>kotlin插件化应用实践 | HOCHIKONG&#39;s WAPORIZer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="kotlin" />
+  
+  
+  
+  
+  <meta name="description" content="Kotlin插件化应用踩坑之路最近我在写一个基于Kotlin+Swing的桌面软件KtMeta，考虑在某些地方添加插件支持，于是就调研了下JVM生态下的插件框架。发现好像也不多，就一些基于OSGi的框架如Apache Felix和pf4j比较有名，star数比较多。但是听闻OSGi极其复杂，说实话我一个桌面软件开发有必要搞那么复杂吗？所以就调研了下有1.2k左右stars的pf4j框架。 坑爹的P">
+<meta name="keywords" content="kotlin">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kotlin插件化应用实践">
+<meta property="og:url" content="http://yoursite.com/2020/08/18/kotlinPluginPractice/index.html">
+<meta property="og:site_name" content="HOCHIKONG&#39;s WAPORIZer">
+<meta property="og:description" content="Kotlin插件化应用踩坑之路最近我在写一个基于Kotlin+Swing的桌面软件KtMeta，考虑在某些地方添加插件支持，于是就调研了下JVM生态下的插件框架。发现好像也不多，就一些基于OSGi的框架如Apache Felix和pf4j比较有名，star数比较多。但是听闻OSGi极其复杂，说实话我一个桌面软件开发有必要搞那么复杂吗？所以就调研了下有1.2k左右stars的pf4j框架。 坑爹的P">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-08-18T13:05:43.404Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kotlin插件化应用实践">
+<meta name="twitter:description" content="Kotlin插件化应用踩坑之路最近我在写一个基于Kotlin+Swing的桌面软件KtMeta，考虑在某些地方添加插件支持，于是就调研了下JVM生态下的插件框架。发现好像也不多，就一些基于OSGi的框架如Apache Felix和pf4j比较有名，star数比较多。但是听闻OSGi极其复杂，说实话我一个桌面软件开发有必要搞那么复杂吗？所以就调研了下有1.2k左右stars的pf4j框架。 坑爹的P">
+  
+    <link rel="alternate" href="/atom.xml" title="HOCHIKONG&#39;s WAPORIZer" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/vapor3.jpg">
+  <link rel="apple-touch-icon" href="/css/images/vapor3.jpg">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/9749f0/00000000000000000001008f/27/l?subset_id=2&fvd=n5) format("woff2");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/90cf9f/000000000000000000010091/27/l?subset_id=2&fvd=n7) format("woff2");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/8a5494/000000000000000000013365/27/l?subset_id=2&fvd=n4) format("woff2");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/d337d8/000000000000000000010095/27/l?subset_id=2&fvd=i4) format("woff2");font-weight:400;font-style:italic;}</style>
+  <link rel="stylesheet" href="/css/style.css">
+
+  <script src="/js/jquery-3.1.1.min.js"></script>
+  <script src="/js/bootstrap.js"></script>
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    <link rel="stylesheet" href="/css/dialog.css">
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+    <link rel="stylesheet" href="/css/vdonate.css" >
+  
+
+</head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="
+                 margin-top: 0px;"  
+                href="#" data-toggle="modal" data-target="#myModal" >
+                  <img width="124px" height="124px" alt="Hike News" src="/css/images/vapor3.jpg">
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">首页</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">归档</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">分类</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">标签</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">关于</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/">Service</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/">Works</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="请输入关键词..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(无标题)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-kotlinPluginPractice" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      Kotlin插件化应用实践
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2020/08/18/kotlinPluginPractice/" class="article-date">
+	  <time datetime="2020-08-18T09:03:30.000Z" itemprop="datePublished">2020-08-18</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/自编软件/">自编软件</a>
+
+      
+	<a class="article-views">
+	<span id="busuanzi_container_page_pv">
+		阅读量<span id="busuanzi_value_page_pv"></span>
+	</span>
+	</a>
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Kotlin插件化应用踩坑之路"><a href="#Kotlin插件化应用踩坑之路" class="headerlink" title="Kotlin插件化应用踩坑之路"></a>Kotlin插件化应用踩坑之路</h1><p>最近我在写一个基于Kotlin+Swing的桌面软件<a href="https://github.com/Hochikong/KtMeta" target="_blank" rel="external">KtMeta</a>，考虑在某些地方添加插件支持，于是就调研了下JVM生态下的插件框架。发现好像也不多，就一些基于OSGi的框架如Apache Felix和pf4j比较有名，star数比较多。但是听闻OSGi极其复杂，说实话我一个桌面软件开发有必要搞那么复杂吗？所以就调研了下有1.2k左右stars的<a href="https://github.com/pf4j/pf4j" target="_blank" rel="external">pf4j框架</a>。</p>
+<h1 id="坑爹的PF4J"><a href="#坑爹的PF4J" class="headerlink" title="坑爹的PF4J"></a>坑爹的PF4J</h1><p>由于我目前主要是使用Kotlin+Gradle，幸好pf4j也有Gradle的demo，所以我就深入分析了下这个<a href="https://github.com/pf4j/pf4j/tree/master/demo_gradle" target="_blank" rel="external">demo</a>。</p>
+<p>！！！这个demo使用的gradle版本较低，因此语法和我现在用的gradle 6存在差别。</p>
+<p>简化的目录树如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div></pre></td><td class="code"><pre><div class="line">.</div><div class="line">|-- api</div><div class="line">|   `-- src</div><div class="line">|       `-- main</div><div class="line">|           `-- java</div><div class="line">|               `-- org</div><div class="line">|                   `-- pf4j</div><div class="line">|                       `-- demo</div><div class="line">|                           `-- api</div><div class="line">|-- app</div><div class="line">|   `-- src</div><div class="line">|       `-- main</div><div class="line">|           |-- java</div><div class="line">|           |   `-- org</div><div class="line">|           |       `-- pf4j</div><div class="line">|           |           `-- demo</div><div class="line">|           `-- resources</div><div class="line">|-- gradle</div><div class="line">|   `-- wrapper</div><div class="line">`-- plugins</div><div class="line">    |-- plugin1</div><div class="line">    |   `-- src</div><div class="line">    |       `-- main</div><div class="line">    |           `-- java</div><div class="line">    |               `-- org</div><div class="line">    |                   `-- pf4j</div><div class="line">    |                       `-- demo</div><div class="line">    |                           `-- welcome</div><div class="line">    |-- plugin2</div><div class="line">    |   `-- src</div><div class="line">    |       `-- main</div><div class="line">    |           `-- java</div><div class="line">    |               `-- org</div><div class="line">    |                   `-- pf4j</div><div class="line">    |                       `-- demo</div><div class="line">    |                           `-- hello</div><div class="line">    `-- plugin3</div><div class="line">        `-- src</div><div class="line">            `-- main</div><div class="line">                `-- kotlin</div><div class="line">                    `-- org</div><div class="line">                        `-- pf4j</div><div class="line">                            `-- demo</div><div class="line">                                `-- kotlin</div></pre></td></tr></table></figure>
+<p>这个demo是个Gradle多模块项目。分为三个模块，api，app和plugins，而plugins里又有3个单独的plugin模块。</p>
+<p>首先我们分析根目录的build.gradle、gradle.properties和settings.gradle：</p>
+<ul>
+<li>build.gradle</li>
+</ul>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">subprojects &#123;</div><div class="line">  apply <span class="string">plugin:</span> <span class="string">'java'</span></div><div class="line"></div><div class="line">  repositories &#123;</div><div class="line">    mavenLocal()</div><div class="line">    mavenCentral()</div><div class="line">  &#125;</div><div class="line">&#125;</div><div class="line"><span class="comment">// plugin location</span></div><div class="line">ext.pluginsDir = rootProject.buildDir.path + <span class="string">'/plugins'</span></div><div class="line"></div><div class="line">task build(<span class="string">dependsOn:</span> [<span class="string">':app:uberjar'</span>])</div></pre></td></tr></table></figure>
+<p>这个文件很简单，定义了subprojects的插件，设置了repositories，定义了一个pluginsDir的变量，指向demo_gradle根目录下的plugins目录，标记gradle的<a href="https://docs.gradle.org/current/userguide/java_plugin.html" target="_blank" rel="external">java plugin</a>的内建命令build依赖于app模块的任务(task)uberjar。uberjar简单地说就是fatjar，把依赖也搞进去了。</p>
+<ul>
+<li>gradle.properties</li>
+</ul>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"># PF4J</div><div class="line">pf4jVersion=<span class="number">3.1</span><span class="number">.0</span></div></pre></td></tr></table></figure>
+<p>这个文件也很简单，就是设定了一个可以被gradle使用的变量。</p>
+<ul>
+<li>settings.gradle</li>
+</ul>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">include <span class="string">'api'</span></div><div class="line">include <span class="string">'app'</span></div><div class="line"></div><div class="line">include <span class="string">'plugins'</span></div><div class="line"></div><div class="line">include <span class="string">'plugins:plugin1'</span></div><div class="line">include <span class="string">'plugins:plugin2'</span></div><div class="line">include <span class="string">'plugins:plugin3'</span></div></pre></td></tr></table></figure>
+<p>这个文件表示了这个多模块项目要包含哪些模块，通过”:”来表示路径分隔符。</p>
+<p>分析完根目录，就分析api模块。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">api</div><div class="line">|-- build.gradle</div><div class="line">`-- src</div><div class="line">    `-- main</div><div class="line">        `-- java</div><div class="line">            `-- org</div><div class="line">                `-- pf4j</div><div class="line">                    `-- demo</div><div class="line">                        `-- api</div><div class="line">                            `-- Greeting.java</div></pre></td></tr></table></figure>
+<p>这个模块中只有一个build.gradle文件，内容如下：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">dependencies &#123;</div><div class="line">    compile <span class="string">group:</span> <span class="string">'org.pf4j'</span>, <span class="string">name:</span> <span class="string">'pf4j'</span>, <span class="string">version:</span> <span class="string">"$&#123;pf4jVersion&#125;"</span></div><div class="line">    compile <span class="string">group:</span> <span class="string">'org.apache.commons'</span>, <span class="string">name:</span> <span class="string">'commons-lang3'</span>, <span class="string">version:</span> <span class="string">'3.5'</span></div><div class="line"></div><div class="line">    testCompile <span class="string">group:</span> <span class="string">'junit'</span>, <span class="string">name:</span> <span class="string">'junit'</span>, <span class="string">version:</span> <span class="string">'4.+'</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面的文件只配置了api模块所依赖的库，并且标记为compile group。而pf4jVersion就是引用根目录下的gradle.properties的设置。</p>
+<p>而api也是一个再简单不过的java代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/*</span></div><div class="line"><span class="comment"> * Copyright (C) 2012-present the original author or authors.</span></div><div class="line"><span class="comment"> *</span></div><div class="line"><span class="comment"> * Licensed under the Apache License, Version 2.0 (the "License");</span></div><div class="line"><span class="comment"> * you may not use this file except in compliance with the License.</span></div><div class="line"><span class="comment"> * You may obtain a copy of the License at</span></div><div class="line"><span class="comment"> *</span></div><div class="line"><span class="comment"> *     http://www.apache.org/licenses/LICENSE-2.0</span></div><div class="line"><span class="comment"> *</span></div><div class="line"><span class="comment"> * Unless required by applicable law or agreed to in writing, software</span></div><div class="line"><span class="comment"> * distributed under the License is distributed on an "AS IS" BASIS,</span></div><div class="line"><span class="comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span></div><div class="line"><span class="comment"> * See the License for the specific language governing permissions and</span></div><div class="line"><span class="comment"> * limitations under the License.</span></div><div class="line"><span class="comment"> */</span></div><div class="line"><span class="keyword">package</span> org.pf4j.demo.api;</div><div class="line"></div><div class="line"><span class="keyword">import</span> org.pf4j.ExtensionPoint;</div><div class="line"></div><div class="line"><span class="comment">/**</span></div><div class="line"><span class="comment"> * <span class="doctag">@author</span> Decebal Suiu</span></div><div class="line"><span class="comment"> */</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Greeting</span> <span class="keyword">extends</span> <span class="title">ExtensionPoint</span> </span>&#123;</div><div class="line"></div><div class="line">    <span class="function">String <span class="title">getGreeting</span><span class="params">()</span></span>;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这个代码没什么难的，就是实现了ExtensionPoint的一个接口而已。</p>
+<p>分析完api模块，接着分析plugins：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line">plugins</div><div class="line">|-- build.gradle</div><div class="line">|-- disabled.txt</div><div class="line">|-- enabled.txt</div><div class="line">|-- plugin1</div><div class="line">|   |-- build.gradle</div><div class="line">|   |-- gradle.properties</div><div class="line">|   `-- src</div><div class="line">|       `-- main</div><div class="line">|           `-- java</div><div class="line">|               `-- org</div><div class="line">|                   `-- pf4j</div><div class="line">|                       `-- demo</div><div class="line">|                           `-- welcome</div><div class="line">|                               `-- WelcomePlugin.java</div><div class="line">|-- plugin2</div><div class="line">|   |-- build.gradle</div><div class="line">|   |-- gradle.properties</div><div class="line">|   `-- src</div><div class="line">|       `-- main</div><div class="line">|           `-- java</div><div class="line">|               `-- org</div><div class="line">|                   `-- pf4j</div><div class="line">|                       `-- demo</div><div class="line">|                           `-- hello</div><div class="line">|                               `-- HelloPlugin.java</div><div class="line">`-- plugin3</div><div class="line">    |-- build.gradle</div><div class="line">    |-- gradle.properties</div><div class="line">    `-- src</div><div class="line">        `-- main</div><div class="line">            `-- kotlin</div><div class="line">                `-- org</div><div class="line">                    `-- pf4j</div><div class="line">                        `-- demo</div><div class="line">                            `-- kotlin</div><div class="line">                                `-- KotlinPlugin.kt</div></pre></td></tr></table></figure>
+<p>这是一个子模块嵌套子模块，存在三个插件，分别为WelcomePlugin、HelloPlugin和KotlinPlugin。</p>
+<p>首先是plugins的enabled.txt和disabled.txt，用于为pf4j分析哪些插件是启用的，下面的是enabled.txt：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">########################################</div><div class="line"># - load only these plugins</div><div class="line"># - add one plugin id on each line</div><div class="line"># - put this file in plugins folder</div><div class="line">########################################</div><div class="line">#welcome-plugin</div></pre></td></tr></table></figure>
+<p>而它的build.gradle文件如下：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line">subprojects &#123;</div><div class="line">  jar &#123;</div><div class="line">    manifest &#123;</div><div class="line">      attributes <span class="string">'Plugin-Class'</span>: <span class="string">"$&#123;pluginClass&#125;"</span>,</div><div class="line">          <span class="string">'Plugin-Id'</span>: <span class="string">"$&#123;pluginId&#125;"</span>,</div><div class="line">          <span class="string">'Plugin-Version'</span>: <span class="string">"$&#123;archiveVersion&#125;"</span>,</div><div class="line">          <span class="string">'Plugin-Provider'</span>: <span class="string">"$&#123;pluginProvider&#125;"</span></div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  task plugin(<span class="string">type:</span> Jar) &#123;</div><div class="line">    archiveBaseName = <span class="string">"plugin-$&#123;pluginId&#125;"</span></div><div class="line">    into(<span class="string">'classes'</span>) &#123;</div><div class="line">      with jar</div><div class="line">    &#125;</div><div class="line">    into(<span class="string">'lib'</span>) &#123;</div><div class="line">      from configurations.compile</div><div class="line">    &#125;</div><div class="line">    archiveExtension =<span class="string">'zip'</span></div><div class="line">  &#125;</div><div class="line"></div><div class="line">  task assemblePlugin(<span class="string">type:</span> Copy) &#123;</div><div class="line">    from plugin</div><div class="line">    into pluginsDir</div><div class="line">  &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line">task assemblePlugins(<span class="string">type:</span> Copy) &#123;</div><div class="line">  dependsOn subprojects.assemblePlugin</div><div class="line">&#125;</div><div class="line"></div><div class="line">build.dependsOn project.tasks.assemblePlugins</div></pre></td></tr></table></figure>
+<p>这个文件分为三大块，subprojects，task assemblePlugins和build。文件的执行顺序从上到下。</p>
+<p>首先分析subprojects，jar是java plugin的内置任务，但这里打包是交由task plugin负责的，jar只负责写入manifest文件。jar的manifest块负责读取子项目中的gradle.properties文件的设置并写入最终打包的zip文件的classes/META-INF/MANIFEST.MF文件内，如plugin3的gradle.properties：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">version=1.0.0</div><div class="line"></div><div class="line">pluginId=KotlinPlugin</div><div class="line">pluginClass=org.pf4j.demo.kotlin.KotlinPlugin</div><div class="line">pluginProvider=Anindya Chatterjee</div><div class="line">pluginDependencies=</div></pre></td></tr></table></figure>
+<p>生成的zip包中对应的classes/META-INF/MANIFEST.MF就是这样（这里的Plugin-Version出了点问题，但是最重要的是Plugin-Class和Id）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">Manifest-Version: 1.0</div><div class="line">Plugin-Id: KotlinPlugin</div><div class="line">Plugin-Provider: Anindya Chatterjee</div><div class="line">Plugin-Version: task &apos;:plugins:plugin3:jar&apos; property &apos;archiveVersion&apos;</div><div class="line">Plugin-Class: org.pf4j.demo.kotlin.KotlinPlugin</div></pre></td></tr></table></figure>
+<p>在完成了jar块之后，就会进入task plugin，这个task主要是负责把build目录下的classes里面的内容以jar的组织方式打包进目标zip包中，而编译时依赖就会进入zip包的lib目录中。</p>
+<p>完成plugin任务后，就会执行assemblePlugin，这个任务的类型是copy，from plugin to pluginsDir意味着把上一步打包出来的zip包复制到demo_gradle/plugins中。然后执行assemblePlugins</p>
+<p>最后是表示plugins这个子项目的build任务需要先完成上述的jar，plugin和assemblePlugin和assemblePlugins任务才能执行。</p>
+<p>最终打包完成的每个插件（zip包）都是这样的组织方式：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">|-- META-INF</div><div class="line">|   `-- MANIFEST.MF</div><div class="line">|-- classes</div><div class="line">|   |-- META-INF</div><div class="line">|   |   |-- MANIFEST.MF</div><div class="line">|   |   |-- extensions.idx</div><div class="line">|   |   `-- plugin3.kotlin_module</div><div class="line">|   `-- org</div><div class="line">|       `-- pf4j</div><div class="line">|           `-- demo</div><div class="line">|               `-- kotlin</div><div class="line">|                   |-- KotlinGreeting.class</div><div class="line">|                   `-- KotlinPlugin.class</div><div class="line">|-- lib</div><div class="line">|   |-- annotations-13.0.jar</div><div class="line">|   |-- commons-lang3-3.5.jar</div><div class="line">|   |-- kotlin-stdlib-1.3.50.jar</div><div class="line">|   |-- kotlin-stdlib-common-1.3.50.jar</div><div class="line">|   |-- kotlin-stdlib-jdk7-1.3.50.jar</div><div class="line">|   `-- kotlin-stdlib-jdk8-1.3.50.jar</div></pre></td></tr></table></figure>
+<p>最顶层的MANIFEST.MF只有Manifest-Version信息，而classes中的MANIFEST.MF则包含了插件项目的gradle.properties信息(Plugin-Id、Plugin-Provider、Plugin-Class和Plugin-Version)和Manifest-Version。</p>
+<p>分析完plugins，就是app了：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">app</div><div class="line">|-- build.gradle</div><div class="line">`-- src</div><div class="line">    `-- main</div><div class="line">        |-- java</div><div class="line">        |   `-- org</div><div class="line">        |       `-- pf4j</div><div class="line">        |           `-- demo</div><div class="line">        |               |-- Boot.java</div><div class="line">        |               `-- WhazzupGreeting.java</div><div class="line">        `-- resources</div><div class="line">            `-- log4j.properties</div></pre></td></tr></table></figure>
+<p>app的build.gradle如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div></pre></td><td class="code"><pre><div class="line">apply plugin: &apos;application&apos;</div><div class="line"></div><div class="line">mainClassName = &apos;org.pf4j.demo.Boot&apos;</div><div class="line">run &#123;</div><div class="line">  systemProperty &apos;pf4j.pluginsDir&apos;, &apos;../build/plugins&apos;</div><div class="line">&#125;</div><div class="line"></div><div class="line">dependencies &#123;</div><div class="line">  compile project(&apos;:api&apos;)</div><div class="line">  compile group: &apos;org.pf4j&apos;, name: &apos;pf4j&apos;, version: &quot;$&#123;pf4jVersion&#125;&quot;</div><div class="line">  annotationProcessor(group: &apos;org.pf4j&apos;, name: &apos;pf4j&apos;, version: &quot;$&#123;pf4jVersion&#125;&quot;)</div><div class="line">  compile group: &apos;org.apache.commons&apos;, name: &apos;commons-lang3&apos;, version: &apos;3.5&apos;</div><div class="line">  compile group: &apos;org.slf4j&apos;, name: &apos;slf4j-simple&apos;, version: &apos;1.7.25&apos;</div><div class="line"></div><div class="line">  testCompile group: &apos;junit&apos;, name: &apos;junit&apos;, version: &apos;4.+&apos;</div><div class="line">&#125;</div><div class="line"></div><div class="line">task uberjar(type: Jar, dependsOn: [&apos;compileJava&apos;]) &#123;</div><div class="line">  zip64 true</div><div class="line">  from configurations.runtimeClasspath.asFileTree.files.collect &#123;</div><div class="line">    exclude &quot;META-INF/*.SF&quot;</div><div class="line">    exclude &quot;META-INF/*.DSA&quot;</div><div class="line">    exclude &quot;META-INF/*.RSA&quot;</div><div class="line">    zipTree(it)</div><div class="line">  &#125;</div><div class="line">  from files(sourceSets.main.output.classesDirs)</div><div class="line">  from files(sourceSets.main.resources)</div><div class="line">  manifest &#123;</div><div class="line">    attributes &apos;Main-Class&apos;: mainClassName</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  archiveBaseName = &quot;$&#123;project.name&#125;-plugin-demo&quot;</div><div class="line">  archiveClassifier = &quot;uberjar&quot;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>apply plugin ‘application’是gradle的内置插件，用于生成可执行程序，程序的主类在uberjar的manifest的’Main-Class’里设置 。说实话这个文件也没什么好讲的。总而言之，这个项目如果拆分成三个单独的gradle项目，首先要做的是把api打包成jar，然后分别放入app和plugin项目中作为本地jar的依赖，对于app，这个api需要用implementation(在gradle 6被用于中代替compile)标记作为运行时依赖。而对于plugin，主要是作为编译时依赖（gradle 6中用compileOnly来标记）。最终打包出来的plugin中是不含api的jar的，而app需要把api包含在内，运行时调用插件即可。</p>
+<p>关于这个app是如何加载和使用插件的网上有例子，这里不再啰嗦，但是这框架的插件脑瘫用法我是忍不了了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line">    ...</div><div class="line"></div><div class="line">    <span class="comment">// create the plugin manager</span></div><div class="line">    PluginManager pluginManager = <span class="keyword">new</span> JarPluginManager(); <span class="comment">// or "new ZipPluginManager() / new DefaultPluginManager()"</span></div><div class="line">    </div><div class="line">    <span class="comment">// start and load all plugins of application</span></div><div class="line">    pluginManager.loadPlugins();</div><div class="line">    pluginManager.startPlugins();</div><div class="line"></div><div class="line">    <span class="comment">// retrieve all extensions for "Greeting" extension point</span></div><div class="line">    List&lt;Greeting&gt; greetings = pluginManager.getExtensions(Greeting.class);</div><div class="line">    <span class="keyword">for</span> (Greeting greeting : greetings) &#123;</div><div class="line">        System.out.println(<span class="string">"&gt;&gt;&gt; "</span> + greeting.getGreeting());</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    <span class="comment">// stop and unload all plugins</span></div><div class="line">    pluginManager.stopPlugins();</div><div class="line">    pluginManager.unloadPlugins();</div><div class="line">    </div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>我用过OpenStack的社区项目stevedore，一个python的插件框架，它的用法是动态加载完驱动就可以把驱动分配给某个变量，然后就可以通过这个变量访问驱动所实现的方法，不需要时就可以卸载驱动。但是你看看这pf4j的傻逼API，我想不懂作者是怎么设计的。</p>
+<h1 id="Kotlin的插件框架实现"><a href="#Kotlin的插件框架实现" class="headerlink" title="Kotlin的插件框架实现"></a>Kotlin的插件框架实现</h1><p>目前我认为最好的Kotlin插件功能实现是直接使用Java反射来处理。处理方式和使用pf4j时差不多。首先建立一个api项目，提供一个接口并打包成jar。在app中要implementation这个jar，而在要开发的plugin项目中compileOnly这个jar。如果你的plugin依赖其他库，这些依赖需要使用implementation而不是api标记，使用api会导致依赖传递到app中。</p>
+<p>我创建了一个测试api：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> io.github.hochikong.ktmeta.driver</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">interface</span> <span class="title">AbstractDriver</span></span>&#123;</div><div class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">accessDrive</span><span class="params">()</span></span>: String</div><div class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">exitDrive</span><span class="params">()</span></span>: <span class="built_in">Boolean</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>接着创建了一个测试plugin，其build.gradle内容如下：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line">plugins &#123;</div><div class="line">    id <span class="string">'java'</span></div><div class="line">    id <span class="string">'org.jetbrains.kotlin.jvm'</span> version <span class="string">'1.3.72'</span></div><div class="line">&#125;</div><div class="line"></div><div class="line">group <span class="string">'io.github.hochikong.ktmeta.driver.official'</span></div><div class="line">version <span class="string">'1.0-SNAPSHOT'</span></div><div class="line"></div><div class="line">repositories &#123;</div><div class="line">    mavenCentral()</div><div class="line">&#125;</div><div class="line"></div><div class="line">dependencies &#123;</div><div class="line">    implementation <span class="string">"org.jetbrains.kotlin:kotlin-stdlib-jdk8"</span></div><div class="line">    compileOnly files(<span class="string">"libs/ktmeta-driver-api-1.0-SNAPSHOT.jar"</span>)</div><div class="line">    testCompile <span class="string">group:</span> <span class="string">'junit'</span>, <span class="string">name:</span> <span class="string">'junit'</span>, <span class="string">version:</span> <span class="string">'4.12'</span></div><div class="line">&#125;</div><div class="line"></div><div class="line">compileKotlin &#123;</div><div class="line">    kotlinOptions.jvmTarget = <span class="string">"1.8"</span></div><div class="line">&#125;</div><div class="line">compileTestKotlin &#123;</div><div class="line">    kotlinOptions.jvmTarget = <span class="string">"1.8"</span></div><div class="line">&#125;</div><div class="line"></div><div class="line">jar &#123;</div><div class="line">    manifest &#123;</div><div class="line">        attributes <span class="string">'Driver-Name0'</span>: <span class="string">'io.github.hochikong.ktmeta.driver.official.FTPDriver'</span></div><div class="line">        attributes <span class="string">'Driver-Name1'</span>: <span class="string">'io.github.hochikong.ktmeta.driver.official.SSHDriver'</span></div><div class="line">    &#125;</div><div class="line">    from &#123;</div><div class="line">        configurations.runtime.collect &#123;</div><div class="line">            it.isDirectory() ? it : zipTree(it)</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面的代码中，对于api使用compileOnly来表示依赖本地的api的jar包。在jar块中，我使用了带不同后缀的两个键Driver-Name来表示这个插件有两个驱动实现：SSHDriver和FTPDriver。这些信息会被写入plugin的MANIFEST.MF中，然后被app所检查以查找需要加载的类的路径。</p>
+<p>我写的测试代码：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> io.github.hochikong.ktmeta.driver.AbstractDriver</div><div class="line"><span class="keyword">import</span> java.lang.reflect.Method</div><div class="line"><span class="keyword">import</span> java.net.URL</div><div class="line"><span class="keyword">import</span> java.net.URLClassLoader</div><div class="line"><span class="keyword">import</span> java.nio.file.Files</div><div class="line"><span class="keyword">import</span> java.util.*</div><div class="line"><span class="keyword">import</span> java.util.jar.JarFile</div><div class="line"><span class="keyword">import</span> kotlin.system.exitProcess</div><div class="line"></div><div class="line"></div><div class="line"><span class="comment">/**</span></div><div class="line"><span class="comment"> * Test only</span></div><div class="line"><span class="comment"> * */</span></div><div class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span> &#123;</div><div class="line"></div><div class="line">    print(<span class="string">"Enter your name: "</span>)</div><div class="line">    <span class="keyword">val</span> input = Scanner(System.`<span class="keyword">in</span>`).nextLine()</div><div class="line">    <span class="keyword">if</span> (input.trim() == <span class="string">"password"</span>) &#123;</div><div class="line">        println(<span class="string">"You can access the db."</span>)</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="comment">// path used for reading manifest</span></div><div class="line">    <span class="keyword">val</span> path = <span class="string">"plugins/ktmeta-driver-1.0-SNAPSHOT.jar"</span></div><div class="line">    <span class="comment">// absp used for load classes</span></div><div class="line">    <span class="keyword">val</span> absp = <span class="string">"file:C:\\Users\\ckhoi\\IdeaProjects\\ktmeta\\plugins\\ktmeta-driver-1.0-SNAPSHOT.jar"</span></div><div class="line">    <span class="keyword">val</span> m = JarFile(path).manifest</div><div class="line">    <span class="keyword">val</span> ma = m.mainAttributes</div><div class="line">    <span class="keyword">val</span> classNames = ma.keys.filter &#123; it.toString().startsWith(<span class="string">"Driver-Name"</span>) &#125;.map &#123; ma[it] &#125;.toList()</div><div class="line"></div><div class="line">    println(classNames)</div><div class="line"></div><div class="line"><span class="comment">//    val urlClassLoader = URLClassLoader(arrayOf(URL(absp)))</span></div><div class="line"><span class="comment">//    val driver = urlClassLoader.loadClass(className)</span></div><div class="line"><span class="comment">//    val instance = driver.newInstance()</span></div><div class="line"><span class="comment">//    println(instance is AbstractDriver)</span></div><div class="line"><span class="comment">//    val met: Method = driver.getMethod("accessDrive")</span></div><div class="line"><span class="comment">//    println(met.invoke(instance))</span></div><div class="line"><span class="comment">//    urlClassLoader.close()</span></div><div class="line"></div><div class="line"></div><div class="line">    print(<span class="string">"Enter to exit..."</span>)</div><div class="line">    <span class="keyword">if</span> (Scanner(System.`<span class="keyword">in</span>`).nextLine() <span class="keyword">is</span> String) &#123;</div><div class="line">        exitProcess(<span class="number">0</span>)</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面的测试代码充分利用了kotlin与java的无缝对接能力。使用JarFile读取jar包并解析manifest的内容，查找所有以Driver-Name开头的attributes并获取类的加载路径。</p>
+<p>然后使用这些代码来加载和调用插件实现的函数：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">val urlClassLoader = URLClassLoader(arrayOf(URL(absp)))</div><div class="line">val driver = urlClassLoader.loadClass(className)</div><div class="line">val instance = driver.newInstance()</div><div class="line">println(instance is AbstractDriver)</div><div class="line">val met: Method = driver.getMethod(&quot;accessDrive&quot;)</div><div class="line">println(met.invoke(instance))</div><div class="line">urlClassLoader.close()</div></pre></td></tr></table></figure>
+<p>最重要的就是约定jar包的manifest文件要包含何种字段，字段对应的值，然后约定app要扫描哪些内容。插件需要实现驱动接口并自包含依赖最后打包成jar提供给app扫描，并根据需要动态加载这些驱动并执行接口中约定的方法。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        <div id="donation_div"></div>
+
+<script src="/js/vdonate.js"></script>
+<script>
+var a = new Donate({
+  title: '如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作!', // 可选参数，打赏标题
+  btnText: '打赏支持', // 可选参数，打赏按钮文字
+  el: document.getElementById('donation_div'),
+  wechatImage: 'https://github.com/Hochikong/ckho-photolib/raw/master/donate/donateWechat.jpg',
+  alipayImage: 'https://github.com/Hochikong/ckho-photolib/blob/master/donate/donateWechat.jpg'
+});
+</script>
+      
+      
+        
+	<div id="comment">
+		<!-- 来必力City版安装代码 -->
+		<div id="lv-container" data-id="city" data-uid="MTAyMC8zMTQzNy84MDAx">
+		<script type="text/javascript">
+		   (function(d, s) {
+		       var j, e = d.getElementsByTagName(s)[0];
+
+		       if (typeof LivereTower === 'function') { return; }
+
+		       j = d.createElement(s);
+		       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+		       j.async = true;
+
+		       e.parentNode.insertBefore(j, e);
+		   })(document, 'script');
+		</script>
+		<noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+		</div>
+		<!-- City版安装代码已完成 -->
+	</div>
+
+
+
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/kotlin/">kotlin</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2020/08/17/embeddedPythonDistribution/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">Python程序的最佳分发方式与实践</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Kotlin插件化应用踩坑之路"><span class="nav-number">1.</span> <span class="nav-text">Kotlin插件化应用踩坑之路</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#坑爹的PF4J"><span class="nav-number">2.</span> <span class="nav-text">坑爹的PF4J</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Kotlin的插件框架实现"><span class="nav-number">3.</span> <span class="nav-text">Kotlin的插件框架实现</span></a></li></ol>
+    
+    </div>
+  </aside>
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2017 - 2020 HOCHIKONG&#39;s WAPORIZer All Rights Reserved.</p>
+	      
+	      
+    		<p class="busuanzi_uv">
+				访客数 : <span id="busuanzi_value_site_uv"></span> |  
+				访问量 : <span id="busuanzi_value_site_pv"></span>
+		    </p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+    <a href="/" class="mobile-nav-link">Service</a>
+  
+    <a href="/" class="mobile-nav-link">Works</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+  <script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+	<div style="display: none;">
+    <script src="https://s95.cnzz.com/z_stat.php?id=1260716016&web_id=1260716016" language="JavaScript"></script>
+  </div>
+
+
+
+	<script async src="////busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js">
+	</script>
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            HOCHIKONG&#39;s WAPORIZer
+          </div>
+          <div class="panel-body">
+            Copyright © 2020 Hochikong All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>
