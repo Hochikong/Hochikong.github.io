@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>经历3天的vert.x学习心得 | HOCHIKONG&#39;s WAPORIZer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="vert.x" />
+  
+  
+  
+  
+  <meta name="description" content="Vert.x简单介绍Vert.x是一个基于Netty、支持多语言的、范式自由的、具有高度灵活性的响应式(Reactive)编程工具包。除了Java、Kotlin，也可以使用JavaScript、Groovy等语言编程。唯一让我感到不愉快的地方在于Vert.x 3.x版本就没有了Python支持，如果Python程序想和Vert.x交互，只能靠TCP bridge或者使用其他手段如HTTP、AMQP">
+<meta name="keywords" content="vert.x">
+<meta property="og:type" content="article">
+<meta property="og:title" content="经历3天的Vert.X学习心得">
+<meta property="og:url" content="http://yoursite.com/2020/08/28/vertxKtThink/index.html">
+<meta property="og:site_name" content="HOCHIKONG&#39;s WAPORIZer">
+<meta property="og:description" content="Vert.x简单介绍Vert.x是一个基于Netty、支持多语言的、范式自由的、具有高度灵活性的响应式(Reactive)编程工具包。除了Java、Kotlin，也可以使用JavaScript、Groovy等语言编程。唯一让我感到不愉快的地方在于Vert.x 3.x版本就没有了Python支持，如果Python程序想和Vert.x交互，只能靠TCP bridge或者使用其他手段如HTTP、AMQP">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-08-28T14:40:05.503Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="经历3天的Vert.X学习心得">
+<meta name="twitter:description" content="Vert.x简单介绍Vert.x是一个基于Netty、支持多语言的、范式自由的、具有高度灵活性的响应式(Reactive)编程工具包。除了Java、Kotlin，也可以使用JavaScript、Groovy等语言编程。唯一让我感到不愉快的地方在于Vert.x 3.x版本就没有了Python支持，如果Python程序想和Vert.x交互，只能靠TCP bridge或者使用其他手段如HTTP、AMQP">
+  
+    <link rel="alternate" href="/atom.xml" title="HOCHIKONG&#39;s WAPORIZer" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/vapor3.jpg">
+  <link rel="apple-touch-icon" href="/css/images/vapor3.jpg">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/9749f0/00000000000000000001008f/27/l?subset_id=2&fvd=n5) format("woff2");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/90cf9f/000000000000000000010091/27/l?subset_id=2&fvd=n7) format("woff2");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/8a5494/000000000000000000013365/27/l?subset_id=2&fvd=n4) format("woff2");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/d337d8/000000000000000000010095/27/l?subset_id=2&fvd=i4) format("woff2");font-weight:400;font-style:italic;}</style>
+  <link rel="stylesheet" href="/css/style.css">
+
+  <script src="/js/jquery-3.1.1.min.js"></script>
+  <script src="/js/bootstrap.js"></script>
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    <link rel="stylesheet" href="/css/dialog.css">
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+    <link rel="stylesheet" href="/css/vdonate.css" >
+  
+
+</head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="
+                 margin-top: 0px;"  
+                href="#" data-toggle="modal" data-target="#myModal" >
+                  <img width="124px" height="124px" alt="Hike News" src="/css/images/vapor3.jpg">
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">首页</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">归档</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">分类</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">标签</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">关于</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/">Service</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/">Works</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="请输入关键词..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(无标题)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-vertxKtThink" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      经历3天的Vert.X学习心得
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2020/08/28/vertxKtThink/" class="article-date">
+	  <time datetime="2020-08-28T04:16:35.000Z" itemprop="datePublished">2020-08-28</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/自编软件/">自编软件</a>
+
+      
+	<a class="article-views">
+	<span id="busuanzi_container_page_pv">
+		阅读量<span id="busuanzi_value_page_pv"></span>
+	</span>
+	</a>
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Vert-x简单介绍"><a href="#Vert-x简单介绍" class="headerlink" title="Vert.x简单介绍"></a>Vert.x简单介绍</h1><p>Vert.x是一个基于Netty、支持多语言的、范式自由的、具有高度灵活性的响应式(Reactive)编程工具包。除了Java、Kotlin，也可以使用JavaScript、Groovy等语言编程。唯一让我感到不愉快的地方在于Vert.x 3.x版本就没有了Python支持，如果Python程序想和Vert.x交互，只能靠TCP bridge或者使用其他手段如HTTP、AMQP、gRPC等。</p>
+<p>Vert.x包含core和其他的一系列模块，如web，数据库，响应式编程，微服务等模块，这些模块都不是必需的，只有vertx-core才是核心模块，jar包大概在1.2MB左右。</p>
+<p>使用Vert.x可以实现异步编程，并解决js的回调地狱，同时也得益于它所提供的类Actor模型，可以写出具有良好的可扩展性、鲁棒性的分布式程序，使用上远比Akka要更加容易。下面介绍下它的设计理念。</p>
+<h1 id="理解Vert-x的参考材料"><a href="#理解Vert-x的参考材料" class="headerlink" title="理解Vert.x的参考材料"></a>理解Vert.x的参考材料</h1><h2 id="了解Java-Swing"><a href="#了解Java-Swing" class="headerlink" title="了解Java Swing"></a>了解Java Swing</h2><p>在介绍Vert.x的设计之前，可以先看看Java Swing的设计。Java Swing是单线程的，但是它通过一定的办法解决线程不安全的问题。一个Swing程序启动后会有一个主线程和一个Event Dispatch Thread，主线程即这个Java程序，而EDT主要是负责处理GUI事件的线程。当GUI上发生了变化，比如按下一个按钮，就会把事件塞入Event Queue中，唯一的EDT负责处理Event Queue中排队的事件。如果直接把阻塞方法交给EDT处理（直接把阻塞方法包含在GUI事件中），就会阻塞EDT，导致GUI卡死。因此，如果GUI事件涉及阻塞方法，应该交由SwingWorker处理，SwingWorker会用别的线程来处理阻塞任务，并在任务处理中或完成之后修改共享变量或返回结果：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> java.util.concurrent.TimeUnit</div><div class="line"><span class="keyword">import</span> javax.swing.JButton</div><div class="line"><span class="keyword">import</span> javax.swing.JFrame</div><div class="line"><span class="keyword">import</span> javax.swing.JProgressBar</div><div class="line"><span class="keyword">import</span> javax.swing.SwingWorker</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span> &#123;</div><div class="line">    GenGui()</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">GenGui</span></span>&#123;</div><div class="line"></div><div class="line">    <span class="keyword">val</span> jb = JProgressBar(<span class="number">0</span>, <span class="number">2000</span>).apply &#123;</div><div class="line">        setBounds(<span class="number">40</span>, <span class="number">40</span>, <span class="number">160</span>, <span class="number">30</span>)</div><div class="line">        value = <span class="number">0</span></div><div class="line">        isStringPainted = <span class="literal">true</span></div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">val</span> btn = JButton(<span class="string">"Click Me"</span>).apply &#123;</div><div class="line">        setBounds(<span class="number">40</span>, <span class="number">90</span>, <span class="number">100</span>, <span class="number">30</span>)</div><div class="line">        addActionListener &#123;</div><div class="line">            iter(<span class="number">0</span>, <span class="number">2000</span>)</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">val</span> frame = JFrame(<span class="string">"progress bar demo"</span>).apply &#123;</div><div class="line">        add(jb)</div><div class="line">        add(btn)</div><div class="line">        setSize(<span class="number">250</span>, <span class="number">200</span>)</div><div class="line">        layout = <span class="literal">null</span></div><div class="line">        isVisible = <span class="literal">true</span></div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">iter</span><span class="params">(start: <span class="type">Int</span>, end: <span class="type">Int</span>)</span></span>&#123;</div><div class="line">        <span class="keyword">val</span> swWorker = <span class="keyword">object</span> : SwingWorker&lt;<span class="built_in">Int</span>, <span class="built_in">Unit</span>&gt;()&#123;</div><div class="line">            <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">doInBackground</span><span class="params">()</span></span>: <span class="built_in">Int</span> &#123;</div><div class="line">                <span class="keyword">var</span> index = start</div><div class="line">                <span class="keyword">while</span> (index &lt;= end)&#123;</div><div class="line">                    jb.value = index</div><div class="line">                    index += <span class="number">20</span></div><div class="line">                    println(index)</div><div class="line">                    TimeUnit.MILLISECONDS.sleep(<span class="number">100</span>)</div><div class="line">                &#125;</div><div class="line">                <span class="keyword">return</span> index</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">done</span><span class="params">()</span></span> &#123;</div><div class="line">                println(<span class="string">"All done"</span>)</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        swWorker.execute()</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面的代码中，当btn被按下，就会往Event Queue里塞入一个事件，轮到被EDT处理时，就会触发iter函数。而iter函数里通过把进度条更新的任务交由swWorker处理，这个worker在工作的时候会直接修改进度条的value，从而实现不阻塞EDT进程。如果阻塞任务没有委托SwingWorker，就会阻塞EDT导致界面卡死。</p>
+<p>如果想安全地修改GUI元素，应该通过Swing的SwingUtilities.invokeLater()或者invokeAndWait()把GUI修改事件放入事件队列中排队，并由EDT负责更新GUI。</p>
+<h2 id="了解Erlang"><a href="#了解Erlang" class="headerlink" title="了解Erlang"></a>了解Erlang</h2><p>在Erlang中，一个Erlang“进程”就是一个Actor，在Erlang虚拟机中可以低成本地创建上万乃至十万的“进程”，“进程”间的交互只能通过消息传递实现，消息是不可变的。每个“进程”单独维护自己的内部状态，因为没有共享状态，就不需要任何锁，能大幅简化并发编程。当一个Actor接收到消息后，就会通过模式匹配找到对应消息的处理函数，处理完成可以通过消息传递把结果发回给原发送者，也可以根据需要发送给下一个Actor。</p>
+<p>Erlang的并发模型是非常直观和容易理解的：</p>
+<ul>
+<li>每个Actor就好像一个独立的人，如果你想叫你的同事帮你收集些资料然后给你在会议中用来做演示，你就需要用消息传递告知TA，不管你用电话还是邮件发送信息都好（传输接口）。</li>
+<li>你发送了请求给TA，你就可以继续做别的事（异步），不需要停下手上的工作等待回复（阻塞）。</li>
+<li>如果TA嫌弃你（内部状态），你作为发送者是无法看到的，经过TA的思考（模式匹配），TA决定不帮你收集，就通过消息传递告知你“我很忙，你找别人吧”。TA可能还会通过消息传递告诉朋友说：被人骚扰了很烦。</li>
+<li>或者TA暗恋你（内部状态），就帮你收集，等收集完成后再消息传递，发送结果给你。由于你不用阻塞等待，在TA发送结果给你之前，你可以继续手上的开会准备。</li>
+<li>当你接收到资料后，就可以开会，展示结果（对外部对象的副作用）</li>
+</ul>
+<p>但是这样是不够的，假设你在开会前需要把资料抄送给直属领导审核（回调），直属领导又要和其他领导开会讨论（回调），就会导致代码中的回调地狱。</p>
+<h1 id="Vert-x分析"><a href="#Vert-x分析" class="headerlink" title="Vert.x分析"></a>Vert.x分析</h1><p>Vert.x的设计也是跟Swing类似的。当一个vertx实例（定位类似Erlang的虚拟机）被创建的时候，它会根据用户配置或者CPU可用核数（含线程）创建含一定数量的Event Loop Thread（下文简称ELT）的pool，在默认情况下，这个线程数量是可用核数*2（比如我的6700HQ，4核8线程，默认会创建16个event loop的pool）。ELT的作用和Swing的EDT类似，主要作用是分发消息并立即返回，而耗时任务交由另一个线程池负责。</p>
+<p>Vertx的两个核心元素分别是Verticle和EventBus。一个Verticle就相当于Erlang进程、actor。而EventBus则是Verticle之间沟通的核心。</p>
+<h2 id="Verticle"><a href="#Verticle" class="headerlink" title="Verticle"></a>Verticle</h2><p>要实现一个Verticle只需要继承AbstractVerticle，并重写start方法，stop方法是可选的：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">CLU2</span> : <span class="type">AbstractVerticle</span></span>()&#123;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">val</span> server = embeddedServer(Netty, <span class="number">8030</span>, module = Application::module2)</div><div class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">start</span><span class="params">()</span></span> &#123;</div><div class="line">        server.start()</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面的Verticle维护了一个内部状态server（Ktor的服务器），start方法会在Verticle部署或者接收到消息的时候执行。vertx会确保start方法只会被同一个event loop处理，但是每个event loop在底层都有可能由不同的ELT负责执行。在start方法里绝对不能写while(true)之类的死循环，就跟Swing一样不应该把循环写进GUI事件中。</p>
+<blockquote>
+<p>The Golden Rule - Don’t Block the Event Loop</p>
+</blockquote>
+<p>利用Kotlin的when表达式，可以写出类似Erlang的模式匹配代码来处理Verticle所接收到的消息：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">ConsumePrint</span> : <span class="type">AbstractVerticle</span></span>() &#123;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">val</span> server = embeddedServer(Netty, <span class="number">8020</span>, module = Application::module2)</div><div class="line">    <span class="keyword">private</span> <span class="keyword">val</span> worker = LoopPrint()</div><div class="line">    <span class="keyword">private</span> <span class="keyword">var</span> name: String = <span class="string">""</span></div><div class="line">    <span class="keyword">private</span> <span class="keyword">val</span> stack = mutableListOf&lt;String&gt;()</div><div class="line"></div><div class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">start</span><span class="params">()</span></span> &#123;</div><div class="line">        vertx.eventBus().consumer&lt;String&gt;(<span class="string">"url1"</span>) &#123; msg -&gt;</div><div class="line">            <span class="keyword">when</span> &#123;</div><div class="line">                msg.body() == <span class="string">"launch"</span> -&gt; &#123;</div><div class="line">                    server.start()</div><div class="line">                    Thread(worker).apply &#123; start() &#125;</div><div class="line">                    vertx.eventBus().send(<span class="string">"url3"</span>, <span class="string">"launch done"</span>)</div><div class="line">                &#125;</div><div class="line">                msg.body() == <span class="string">"stop"</span> -&gt; &#123;</div><div class="line">                    println(<span class="string">"Closing server"</span>)</div><div class="line">                    server.stop(<span class="number">10</span>, <span class="number">10</span>)</div><div class="line">                    worker.close()</div><div class="line">                &#125;</div><div class="line">                msg.body() == <span class="string">"simpleLoop"</span> -&gt; &#123;</div><div class="line">                    vertx.executeBlocking&lt;String&gt;(&#123; future -&gt;</div><div class="line">                        run &#123;</div><div class="line">                            <span class="keyword">var</span> d = <span class="number">0.0</span></div><div class="line">                            <span class="keyword">for</span> (i <span class="keyword">in</span> <span class="number">0.</span><span class="number">.10000000</span>) d += (i * <span class="number">10</span> / <span class="number">23</span> * <span class="number">10.02368899</span>)</div><div class="line">                            future.complete(d.toString())</div><div class="line">                        &#125;</div><div class="line">                    &#125;) &#123; res -&gt; println(<span class="string">" !!!!!!!! <span class="variable">$res</span>"</span>) &#125;</div><div class="line">                &#125;</div><div class="line">                msg.body() == <span class="string">"changeName"</span> -&gt; &#123;</div><div class="line">                    <span class="keyword">val</span> context = vertx.orCreateContext</div><div class="line">                    context.put(<span class="string">"key"</span>, <span class="string">"This is value"</span>)</div><div class="line">                    context.runOnContext &#123;</div><div class="line">                        println(context.<span class="keyword">get</span>(<span class="string">"key"</span>) <span class="keyword">as</span> String)</div><div class="line">                    &#125;</div><div class="line">                &#125;</div><div class="line">                msg.body() == <span class="string">"addStack"</span> -&gt; &#123;</div><div class="line">                    vertx.executeBlocking&lt;String&gt;(&#123; promise -&gt;</div><div class="line">                        run &#123;</div><div class="line">                            Thread.sleep(<span class="number">10000</span>)</div><div class="line">                            promise.complete(<span class="keyword">if</span> (stack.isNotEmpty()) stack.last() <span class="keyword">else</span> <span class="string">"stack 1"</span>)</div><div class="line">                        &#125;</div><div class="line">                    &#125;) &#123; res -&gt;</div><div class="line">                        run &#123;</div><div class="line">                            stack.add(res.result().toString())</div><div class="line">                            vertx.eventBus().send(<span class="string">"url3"</span>, <span class="string">"I received your msg!!"</span>)</div><div class="line">                            println(stack)</div><div class="line">                        &#125;</div><div class="line">                    &#125;</div><div class="line">                &#125;</div><div class="line">                msg.body() == <span class="string">"Stack"</span> -&gt; &#123;</div><div class="line">                    vertx.eventBus().send(<span class="string">"url3"</span>, <span class="string">"stack is <span class="variable">$stack</span>"</span>)</div><div class="line">                &#125;</div><div class="line">                <span class="keyword">else</span> -&gt; println(<span class="string">"1 received message.body is <span class="subst">$&#123;msg.body()&#125;</span>"</span>)</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面的测试代码就是通过when来判断来自其他地址发送的消息体，然后执行不同的操作。</p>
+<p>也可以对消息头进行判断：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">Waste</span> : <span class="type">AbstractVerticle</span></span>()&#123;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">val</span> mapper = ObjectMapper().registerModule(KotlinModule())</div><div class="line"></div><div class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">start</span><span class="params">()</span></span> &#123;</div><div class="line">        vertx.eventBus().localConsumer&lt;String&gt;(<span class="string">"url2"</span>) &#123; msg -&gt;</div><div class="line">            <span class="keyword">val</span> header = msg.headers()</div><div class="line">            <span class="keyword">when</span>(header.<span class="keyword">get</span>(<span class="string">"msg"</span>))&#123;</div><div class="line">                <span class="string">"waste"</span> -&gt; &#123;</div><div class="line">                    println(<span class="string">"from url2: <span class="subst">$&#123;mapper.readValue&lt;Person&gt;(msg.body())&#125;</span>"</span>)</div><div class="line">                    msg.reply(<span class="string">"you are wasting"</span>)</div><div class="line">                &#125;</div><div class="line">                <span class="keyword">else</span> -&gt; &#123;</div><div class="line">                    println(<span class="string">"Waste wrong"</span>)</div><div class="line">                    msg.fail(<span class="number">23</span>, <span class="string">"Waste wrong reply"</span>)</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>如果需要执行耗时任务，可以部署worker verticle或者用executeBlocking：</p>
+<p>一个worker verticle其实跟普通verticle差别不大，区别在于内部是由worker pool的线程来执行耗时任务，部署的时候也要设置：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">val</span> vertx = Vertx.vertx()</div><div class="line">println(<span class="string">"size is:  <span class="subst">$&#123;VertxOptions().eventLoopPoolSize&#125;</span>"</span>)</div><div class="line">......</div><div class="line">vertx.deployVerticle(WorkerV::<span class="class"><span class="keyword">class</span>.<span class="title">java</span>.<span class="title">name</span>, <span class="type">deploymentOptionsOf</span></span>(worker = <span class="literal">true</span>)) &#123; res -&gt;</div><div class="line">        run &#123;</div><div class="line">            <span class="keyword">if</span> (res.succeeded()) &#123;</div><div class="line">                println(<span class="string">"Deployment id is: <span class="subst">$&#123;res.result()&#125;</span>"</span>)</div><div class="line">                ids.add(res.result())</div><div class="line">            &#125; <span class="keyword">else</span> &#123;</div><div class="line">                println(<span class="string">"Deployment failed!"</span>)</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p>在最新的稳定版本中（3.9.2），可以直接在verticle内部用executeBlocking来执行阻塞代码：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">msg.body() == <span class="string">"addStack"</span> -&gt; &#123;</div><div class="line">                    vertx.executeBlocking&lt;String&gt;(&#123; promise -&gt;</div><div class="line">                        run &#123;</div><div class="line">                            Thread.sleep(<span class="number">10000</span>)</div><div class="line">                            promise.complete(<span class="keyword">if</span> (stack.isNotEmpty()) stack.last() <span class="keyword">else</span> <span class="string">"stack 1"</span>)</div><div class="line">                        &#125;</div><div class="line">                    &#125;) &#123; res -&gt;</div><div class="line">                        run &#123;</div><div class="line">                            stack.add(res.result().toString())</div><div class="line">                            vertx.eventBus().send(<span class="string">"url3"</span>, <span class="string">"I received your msg!!"</span>)</div><div class="line">                            println(stack)</div><div class="line">                        &#125;</div><div class="line">                    &#125;</div><div class="line">                &#125;</div></pre></td></tr></table></figure>
+<p>executeBlocking的泛型参数是用于标记返回类型，代码里第一个lambda是处理器，用于执行耗时任务，并通过complete方法设置返回值，第二个lambda是对结果的callback方法，即对处理器的返回值进行处理。但是如果处理器中的阻塞代码可能会阻塞超过10秒，就不建议用使用上述两种方法了。最好单独创建进程来执行，比如本小节最开头的Ktor服务器的embeddedServer，start方法只负责启动ktor服务器。如果需要与verticle的context交互，应该通过runOnContext或者event bus来介入event loop中：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">msg.body() == <span class="string">"changeName"</span> -&gt; &#123;</div><div class="line">                    <span class="keyword">val</span> context = vertx.orCreateContext</div><div class="line">                    context.put(<span class="string">"key"</span>, <span class="string">"This is value"</span>)</div><div class="line">                    context.runOnContext &#123;</div><div class="line">                        println(context.<span class="keyword">get</span>(<span class="string">"key"</span>) <span class="keyword">as</span> String)</div><div class="line">                    &#125;</div><div class="line">                &#125;</div></pre></td></tr></table></figure>
+<p>上面通过put方法对verticle的上下文添加了一个键为key，值为this is value的内部共享状态。而runOnContext其实就跟Swing的invokeLater方法类似，都是把事件提交进队列中就返回，等待event loop的处理（异步任务）。</p>
+<p>至于什么是context？context是为每个event loop分配的一个对象。</p>
+<blockquote>
+<p>当 Vert.x 传递一个事件给处理器或者调用 Verticle 的 start 或 stop 方法时，它会关联一个 Context 对象来执行。通常来说这个 Context 会是一个 Event Loop Context，它绑定到了一个特定的 Event Loop 线程上。所以在该 Context 上执行的操作总是在同一个 Event Loop 线程中。对于运行内联的阻塞代码的 Worker Verticle 来说，会关联一个 Worker Context，并且所有的操作运都会运行在 Worker 线程池的线程上。</p>
+<p>每个 Verticle 在部署的时候都会被分配一个 Context（根据配置不同，可以是Event Loop Context 或者 Worker Context），之后此 Verticle 上所有的普通代码都会在此 Context 上执行（即对应的 Event Loop 或Worker 线程）。一个 Context 对应一个 Event Loop 线程（或 Worker 线程），但一个 Event Loop (Thread) 可能对应多个 Context。</p>
+</blockquote>
+<p>部署完verticle之后可以通过undeploy方法取消已经部署的verticle实例，但是经过测试，目前3.9.2中如果在关闭vertx对象前把全部verticle手动取消部署，最终在vertx对象的close方法执行时会报异常：<em>java.lang.IllegalStateException: Unknown deployment</em></p>
+<h2 id="Event-Bus"><a href="#Event-Bus" class="headerlink" title="Event Bus"></a>Event Bus</h2><p>Event bus其实就是类似AMQP的消息队列，在Erlang中进程主要是靠进程的pid来作为地址发送和接收消息，而在Vertx中，只需要一个字符串就可以作为地址，字符串的格式并没有固定的格式要求，因此非常灵活。在Vertx的event bus中主要有以下几种消息传递方式：</p>
+<ul>
+<li>publish：所有订阅该地址的verticle都会收到这个消息。</li>
+<li>send：简单地发送一个消息到该地址，但是如果有多个verticle都订阅该地址，只有一个会接收到消息。</li>
+<li>request：跟send类似，但是可以添加回复处理器，可以处理接收者返回的reply，类似RPC调用。</li>
+</ul>
+<p>用request发送消息可以包含消息头（send不支持），可以这样设置：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">data</span> <span class="class"><span class="keyword">class</span> <span class="title">Person</span></span>(<span class="keyword">val</span> name: String, <span class="keyword">val</span> age: <span class="built_in">Int</span>)</div><div class="line">......</div><div class="line">vertx.eventBus().request&lt;String&gt;(</div><div class="line">                        <span class="string">"url2"</span>,</div><div class="line">                        mapper.writeValueAsString(Person(<span class="string">"css"</span>, <span class="number">24</span>)),</div><div class="line">                        deliveryOptionsOf(headers = mapOf(<span class="string">"msg"</span> to <span class="string">"no waste"</span>))</div><div class="line">                    ) &#123; reply -&gt;</div><div class="line">                        <span class="keyword">if</span> (reply.succeeded()) &#123;</div><div class="line">                            println(<span class="string">"Main received reply: <span class="subst">$&#123;reply.result().body()&#125;</span>"</span>)</div><div class="line">                        &#125; <span class="keyword">else</span> &#123;</div><div class="line">                            println(<span class="string">"Main received failed reply: <span class="subst">$&#123;reply.cause().message&#125;</span>"</span>)</div><div class="line">                        &#125;</div><div class="line">                    &#125;</div></pre></td></tr></table></figure>
+<p>上面的代码中，url为url2。跟着的是一个使用Jackson序列化的data class转换得到的字符串，作为消息体。deliveryOptionsOf是发送用的配置信息，这里就设置了一个map作为headers。最后的lambda是回复处理器，用于处理来自url2的verticle返回的回复。</p>
+<p>为了接收消息，可以用consumer或者localConsumer来处理：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">vertx.eventBus().localConsumer&lt;String&gt;(<span class="string">"url2"</span>) &#123; msg -&gt;</div><div class="line">            <span class="keyword">val</span> header = msg.headers()</div><div class="line">            <span class="keyword">when</span>(header.<span class="keyword">get</span>(<span class="string">"msg"</span>))&#123;</div><div class="line">                <span class="string">"waste"</span> -&gt; &#123;</div><div class="line">                    println(<span class="string">"from url2: <span class="subst">$&#123;mapper.readValue&lt;Person&gt;(msg.body())&#125;</span>"</span>)</div><div class="line">                    msg.reply(<span class="string">"you are wasting"</span>)</div><div class="line">                &#125;</div><div class="line">                <span class="keyword">else</span> -&gt; &#123;</div><div class="line">                    println(<span class="string">"Waste wrong"</span>)</div><div class="line">                    msg.fail(<span class="number">23</span>, <span class="string">"Waste wrong reply"</span>)</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">        &#125;</div></pre></td></tr></table></figure>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">vertx.eventBus().consumer&lt;String&gt;(<span class="string">"url1"</span>) &#123; msg -&gt;</div><div class="line">            <span class="keyword">when</span>(msg.body()) &#123;</div><div class="line">                <span class="string">"launch"</span> -&gt; &#123;</div><div class="line">                    server.start()</div><div class="line">                    Thread(worker).apply &#123; start() &#125;</div><div class="line">                    vertx.eventBus().send(<span class="string">"url3"</span>, <span class="string">"launch done"</span>)</div><div class="line">                &#125;</div><div class="line">                ......</div></pre></td></tr></table></figure>
+<p>consumer比起local的，可以处理集群中的消息。consumer的msg可以用于回复发送者，比如reply和fail方法。</p>
+<p>被发送的消息可以是普通的文本，或者用vertx提供的json dsl来创建JSON，vertx会自动处理序列化和反序列化的任务。但是我觉得目前3.9.2的json dsl并不好用，因此我选择直接用Jackson来对data class进行序列化用于发送。</p>
+<h2 id="Future"><a href="#Future" class="headerlink" title="Future"></a>Future</h2><p>Future是vertx提供的用于解决回调地狱的工具，下面的代码演示了在3.9.2下如何正确地使用Future：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> io.vertx.core.*</div><div class="line"><span class="keyword">import</span> java.util.*</div><div class="line"><span class="keyword">import</span> kotlin.system.exitProcess</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">ComposeExample</span> : <span class="type">AbstractVerticle</span></span>() &#123;</div><div class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">start</span><span class="params">()</span></span> &#123;</div><div class="line">        <span class="keyword">val</span> future = anAsyncAction()</div><div class="line">        future.compose &#123; name: String -&gt; anotherAsyncAction(name) &#125;</div><div class="line">            .onComplete &#123; ar: AsyncResult&lt;String&gt; -&gt;</div><div class="line">                <span class="keyword">if</span> (ar.failed()) &#123;</div><div class="line">                    println(<span class="string">"Something bad happened"</span>)</div><div class="line">                    ar.cause().printStackTrace()</div><div class="line">                &#125; <span class="keyword">else</span> &#123;</div><div class="line">                    println(<span class="string">"Result: "</span> + ar.result())</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">anAsyncAction</span><span class="params">()</span></span>: Future&lt;String&gt; &#123;</div><div class="line">        <span class="keyword">val</span> promise = Promise.promise&lt;String&gt;()</div><div class="line">        <span class="comment">// mimic something that take times</span></div><div class="line">        vertx.setTimer(<span class="number">1000</span>) &#123; promise.complete(<span class="string">"world"</span>) &#125;</div><div class="line">        <span class="keyword">return</span> promise.future()</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">anotherAsyncAction</span><span class="params">(name: <span class="type">String</span>)</span></span>: Future&lt;String&gt; &#123;</div><div class="line">        <span class="keyword">val</span> promise = Promise.promise&lt;String&gt;()</div><div class="line">        <span class="comment">// mimic something that take times</span></div><div class="line">        vertx.setTimer(<span class="number">100</span>) &#123; promise.complete(<span class="string">"hello <span class="variable">$name</span>"</span>) &#125;</div><div class="line">        <span class="keyword">return</span> promise.future()</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span> &#123;</div><div class="line">    <span class="keyword">val</span> vert = Vertx.vertx()</div><div class="line">    vert.deployVerticle(ComposeExample::<span class="class"><span class="keyword">class</span>.<span class="title">java</span>.<span class="title">name</span>)</span></div><div class="line">    println(<span class="string">"enter to exit..."</span>)</div><div class="line">    Scanner(System.`<span class="keyword">in</span>`).nextLine()</div><div class="line">    exitProcess(<span class="number">0</span>)</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以使用compose来调度异步任务的顺序。在我刚接触Vertx的时候我曾被Future和executeBlocking这种用于执行阻塞任务的函数有什么相关关系所困惑。其实Future只是一个异步任务容器，一个封装了future的函数里可以包含executeBlocking这种阻塞任务，而Future只是一个用来解决回调地狱的工具。</p>
+<h2 id="高可用"><a href="#高可用" class="headerlink" title="高可用"></a>高可用</h2><p>Vertx的架构本身就适合于分布式应用，而它通过集群管理器设置为集群模式并启用高可用模式。我目前就尝试了vertx默认的Hazelcast，但实际上也可以使用Zookeeper等工具作为集群管理器。</p>
+<p>想使用Hazelcast，只需要在build.gradle里添加相关依赖：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">dependencies &#123;</div><div class="line"><span class="comment">/*    Useless in kotlin 1.4.0</span></div><div class="line"><span class="comment">    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"*/</span></div><div class="line">    implementation <span class="string">"io.vertx:vertx-core:3.9.2"</span></div><div class="line">    implementation <span class="string">"io.vertx:vertx-hazelcast:3.9.2"</span></div><div class="line">    implementation <span class="string">"io.vertx:vertx-lang-kotlin:3.9.2"</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>然后就可以开始编写代码：</p>
+<p>集群节点1的verticle：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">CLU1</span> : <span class="type">AbstractVerticle</span></span>()&#123;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">val</span> server = embeddedServer(Netty, <span class="number">8020</span>, module = Application::module2)</div><div class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">start</span><span class="params">()</span></span> &#123;</div><div class="line">        server.start()</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span> &#123;</div><div class="line">    Vertx.clusteredVertx(vertxOptionsOf(haEnabled = <span class="literal">true</span>)) &#123; vertx -&gt;</div><div class="line">        vertx.result().deployVerticle(CLU1::<span class="class"><span class="keyword">class</span>.<span class="title">java</span>.<span class="title">name</span>, <span class="type">deploymentOptionsOf</span></span>(ha = <span class="literal">true</span>))</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>集群节点2的verticle：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">CLU2</span> : <span class="type">AbstractVerticle</span></span>()&#123;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">val</span> server = embeddedServer(Netty, <span class="number">8030</span>, module = Application::module2)</div><div class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">start</span><span class="params">()</span></span> &#123;</div><div class="line">        server.start()</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">fun</span> <span class="title">main</span><span class="params">()</span></span> &#123;</div><div class="line">    Vertx.clusteredVertx(vertxOptionsOf(haEnabled = <span class="literal">true</span>)) &#123; vertx -&gt;</div><div class="line">        vertx.result().deployVerticle(CLU2::<span class="class"><span class="keyword">class</span>.<span class="title">java</span>.<span class="title">name</span>, <span class="type">deploymentOptionsOf</span></span>(ha = <span class="literal">true</span>))</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>通过clusteredVertx可以创建集群模式的vertx实例，两个ktor实例都在本地运行，只是监听的端口不同。可以先启动CLU1看看会输出什么：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line">八月 28, 2020 9:56:39 下午 com.hazelcast.instance.AddressPicker</div><div class="line">信息: [LOCAL] [dev] [3.12.2] Prefer IPv4 stack is true, prefer IPv6 addresses is false</div><div class="line">八月 28, 2020 9:56:39 下午 com.hazelcast.instance.AddressPicker</div><div class="line">信息: [LOCAL] [dev] [3.12.2] Picked [192.168.233.1]:5701, using socket ServerSocket[addr=/0:0:0:0:0:0:0:0,localport=5701], bind any local is true</div><div class="line">八月 28, 2020 9:56:39 下午 com.hazelcast.system</div><div class="line">信息: [192.168.233.1]:5701 [dev] [3.12.2] Hazelcast 3.12.2 (20190802 - e34b163) starting at [192.168.233.1]:5701</div><div class="line">八月 28, 2020 9:56:39 下午 com.hazelcast.system</div><div class="line">信息: [192.168.233.1]:5701 [dev] [3.12.2] Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.</div><div class="line">八月 28, 2020 9:56:40 下午 com.hazelcast.spi.impl.operationservice.impl.BackpressureRegulator</div><div class="line">信息: [192.168.233.1]:5701 [dev] [3.12.2] Backpressure is disabled</div><div class="line">八月 28, 2020 9:56:41 下午 com.hazelcast.instance.Node</div><div class="line">信息: [192.168.233.1]:5701 [dev] [3.12.2] Creating MulticastJoiner</div><div class="line">八月 28, 2020 9:56:42 下午 com.hazelcast.spi.impl.operationexecutor.impl.OperationExecutorImpl</div><div class="line">信息: [192.168.233.1]:5701 [dev] [3.12.2] Starting 8 partition threads and 5 generic threads (1 dedicated for priority tasks)</div><div class="line">八月 28, 2020 9:56:42 下午 com.hazelcast.internal.diagnostics.Diagnostics</div><div class="line">信息: [192.168.233.1]:5701 [dev] [3.12.2] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.</div><div class="line">八月 28, 2020 9:56:42 下午 com.hazelcast.core.LifecycleService</div><div class="line">信息: [192.168.233.1]:5701 [dev] [3.12.2] [192.168.233.1]:5701 is STARTING</div><div class="line">八月 28, 2020 9:56:44 下午 com.hazelcast.internal.cluster.ClusterService</div><div class="line">信息: [192.168.233.1]:5701 [dev] [3.12.2] </div><div class="line"></div><div class="line">Members &#123;size:1, ver:1&#125; [</div><div class="line">	Member [192.168.233.1]:5701 - d594a601-9adc-493a-afad-57c3377a4d70 this</div><div class="line">]</div><div class="line"></div><div class="line">八月 28, 2020 9:56:44 下午 com.hazelcast.core.LifecycleService</div><div class="line">信息: [192.168.233.1]:5701 [dev] [3.12.2] [192.168.233.1]:5701 is STARTED</div><div class="line"></div><div class="line">......</div><div class="line"></div><div class="line">八月 28, 2020 9:56:45 下午 com.hazelcast.internal.partition.impl.PartitionStateManager</div><div class="line">信息: [192.168.233.1]:5701 [dev] [3.12.2] Initializing cluster partition table arrangement...</div><div class="line">八月 28, 2020 9:56:46 下午 io.vertx.core.impl.HAManager</div><div class="line">信息: A quorum has been obtained. Any deploymentIDs waiting on a quorum will now be deployed</div><div class="line">21:56:46.298 [vert.x-eventloop-thread-1] INFO ktor.application - No ktor.deployment.watch patterns specified, automatic reload is not active</div><div class="line">21:56:46.474 [vert.x-eventloop-thread-1] INFO ktor.application - Responding at http://0.0.0.0:8020</div></pre></td></tr></table></figure>
+<p>可以看到目前的集群成员只有一个member，uid为d594a601-9adc-493a-afad-57c3377a4d70，并标记了this。Ktor服务器在localhost的8020端口监听。</p>
+<p>此时再启动CLU2：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div></pre></td><td class="code"><pre><div class="line">八月 28, 2020 10:00:16 下午 com.hazelcast.instance.AddressPicker</div><div class="line">信息: [LOCAL] [dev] [3.12.2] Prefer IPv4 stack is true, prefer IPv6 addresses is false</div><div class="line">八月 28, 2020 10:00:16 下午 com.hazelcast.instance.AddressPicker</div><div class="line">信息: [LOCAL] [dev] [3.12.2] Picked [192.168.233.1]:5702, using socket ServerSocket[addr=/0:0:0:0:0:0:0:0,localport=5702], bind any local is true</div><div class="line">八月 28, 2020 10:00:16 下午 com.hazelcast.system</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Hazelcast 3.12.2 (20190802 - e34b163) starting at [192.168.233.1]:5702</div><div class="line">八月 28, 2020 10:00:16 下午 com.hazelcast.system</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Copyright (c) 2008-2019, Hazelcast, Inc. All Rights Reserved.</div><div class="line">八月 28, 2020 10:00:17 下午 com.hazelcast.spi.impl.operationservice.impl.BackpressureRegulator</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Backpressure is disabled</div><div class="line">八月 28, 2020 10:00:18 下午 com.hazelcast.instance.Node</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Creating MulticastJoiner</div><div class="line">八月 28, 2020 10:00:19 下午 com.hazelcast.spi.impl.operationexecutor.impl.OperationExecutorImpl</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Starting 8 partition threads and 5 generic threads (1 dedicated for priority tasks)</div><div class="line">八月 28, 2020 10:00:19 下午 com.hazelcast.internal.diagnostics.Diagnostics</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Diagnostics disabled. To enable add -Dhazelcast.diagnostics.enabled=true to the JVM arguments.</div><div class="line">八月 28, 2020 10:00:19 下午 com.hazelcast.core.LifecycleService</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] [192.168.233.1]:5702 is STARTING</div><div class="line">八月 28, 2020 10:00:19 下午 com.hazelcast.internal.cluster.impl.MulticastJoiner</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Trying to join to discovered node: [192.168.233.1]:5701</div><div class="line">八月 28, 2020 10:00:19 下午 com.hazelcast.nio.tcp.TcpIpConnector</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Connecting to /192.168.233.1:5701, timeout: 10000, bind-any: true</div><div class="line">八月 28, 2020 10:00:19 下午 com.hazelcast.nio.tcp.TcpIpConnection</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Initialized new cluster connection between /192.168.233.1:7582 and /192.168.233.1:5701</div><div class="line">八月 28, 2020 10:00:25 下午 com.hazelcast.internal.cluster.ClusterService</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] </div><div class="line"></div><div class="line">Members &#123;size:2, ver:2&#125; [</div><div class="line">	Member [192.168.233.1]:5701 - d594a601-9adc-493a-afad-57c3377a4d70</div><div class="line">	Member [192.168.233.1]:5702 - b6af6227-f4d5-4730-a64d-f6fc11583760 this</div><div class="line">]</div><div class="line"></div><div class="line">八月 28, 2020 10:00:26 下午 com.hazelcast.core.LifecycleService</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] [192.168.233.1]:5702 is STARTED</div><div class="line"></div><div class="line">......</div><div class="line"></div><div class="line">八月 28, 2020 10:00:27 下午 io.vertx.core.impl.HAManager</div><div class="line">信息: A quorum has been obtained. Any deploymentIDs waiting on a quorum will now be deployed</div><div class="line">22:00:27.787 [vert.x-eventloop-thread-1] INFO ktor.application - No ktor.deployment.watch patterns specified, automatic reload is not active</div><div class="line">22:00:27.888 [vert.x-eventloop-thread-1] INFO ktor.application - Responding at http://0.0.0.0:8030</div></pre></td></tr></table></figure>
+<p>同时在CLU1的console输出了配对的信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">八月 28, 2020 10:00:19 下午 com.hazelcast.nio.tcp.TcpIpConnection</div><div class="line">信息: [192.168.233.1]:5701 [dev] [3.12.2] Initialized new cluster connection between /192.168.233.1:5701 and /192.168.233.1:7582</div><div class="line">八月 28, 2020 10:00:25 下午 com.hazelcast.internal.cluster.ClusterService</div><div class="line">信息: [192.168.233.1]:5701 [dev] [3.12.2] </div><div class="line"></div><div class="line">Members &#123;size:2, ver:2&#125; [</div><div class="line">	Member [192.168.233.1]:5701 - d594a601-9adc-493a-afad-57c3377a4d70 this</div><div class="line">	Member [192.168.233.1]:5702 - b6af6227-f4d5-4730-a64d-f6fc11583760</div><div class="line">]</div><div class="line"></div><div class="line">八月 28, 2020 10:00:25 下午 com.hazelcast.internal.partition.impl.MigrationManager</div><div class="line">信息: [192.168.233.1]:5701 [dev] [3.12.2] Re-partitioning cluster data... Migration queue size: 271</div><div class="line">八月 28, 2020 10:00:27 下午 com.hazelcast.internal.partition.impl.MigrationThread</div><div class="line">信息: [192.168.233.1]:5701 [dev] [3.12.2] All migration tasks have been completed. (lastRepartitionTime=Fri Aug 28 22:00:25 CST 2020, completedMigrations=271, totalCompletedMigrations=271, elapsedMigrationTime=1052ms, totalElapsedMigrationTime=1052ms)</div></pre></td></tr></table></figure>
+<p>可以看到在我的本地环境已经运行了一个两个成员的集群，在不同的console里是会用this显示哪个uid才是目前的vertx实例。</p>
+<p>由于两个CLU都启用了高可用的设置，如果现在随便关闭一个vertx集群成员，vertx就会自动把失效的成员中的verticle迁移到其他可用集群成员中。下面是我kill了CLU1后CLU2的输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div></pre></td><td class="code"><pre><div class="line">八月 28, 2020 10:02:27 下午 com.hazelcast.spi.impl.operationservice.impl.InvocationMonitor</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Invocations:1 timeouts:1 backup-timeouts:0</div><div class="line">八月 28, 2020 10:05:11 下午 com.hazelcast.nio.tcp.TcpIpConnection</div><div class="line">警告: [192.168.233.1]:5702 [dev] [3.12.2] Connection[id=1, /192.168.233.1:7582-&gt;/192.168.233.1:5701, qualifier=null, endpoint=[192.168.233.1]:5701, alive=false, type=MEMBER] closed. Reason: Exception in Connection[id=1, /192.168.233.1:7582-&gt;/192.168.233.1:5701, qualifier=null, endpoint=[192.168.233.1]:5701, alive=true, type=MEMBER], thread=hz._hzInstance_1_dev.IO.thread-in-0</div><div class="line">java.io.IOException: 远程主机强迫关闭了一个现有的连接。</div><div class="line">	at sun.nio.ch.SocketDispatcher.read0(Native Method)</div><div class="line">	at sun.nio.ch.SocketDispatcher.read(SocketDispatcher.java:43)</div><div class="line">	at sun.nio.ch.IOUtil.readIntoNativeBuffer(IOUtil.java:223)</div><div class="line">	at sun.nio.ch.IOUtil.read(IOUtil.java:197)</div><div class="line">	at sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:380)</div><div class="line">	at com.hazelcast.internal.networking.nio.NioInboundPipeline.process(NioInboundPipeline.java:113)</div><div class="line">	at com.hazelcast.internal.networking.nio.NioThread.processSelectionKey(NioThread.java:369)</div><div class="line">	at com.hazelcast.internal.networking.nio.NioThread.processSelectionKeys(NioThread.java:354)</div><div class="line">	at com.hazelcast.internal.networking.nio.NioThread.selectLoop(NioThread.java:280)</div><div class="line">	at com.hazelcast.internal.networking.nio.NioThread.run(NioThread.java:235)</div><div class="line"></div><div class="line">八月 28, 2020 10:05:11 下午 com.hazelcast.nio.tcp.TcpIpConnector</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Connecting to /192.168.233.1:5701, timeout: 10000, bind-any: true</div><div class="line">八月 28, 2020 10:05:13 下午 com.hazelcast.nio.tcp.TcpIpConnector</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Could not connect to: /192.168.233.1:5701. Reason: SocketException[Connection refused: no further information to address /192.168.233.1:5701]</div><div class="line">八月 28, 2020 10:05:13 下午 com.hazelcast.nio.tcp.TcpIpConnector</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Connecting to /192.168.233.1:5701, timeout: 10000, bind-any: true</div><div class="line">八月 28, 2020 10:05:15 下午 com.hazelcast.nio.tcp.TcpIpConnector</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Could not connect to: /192.168.233.1:5701. Reason: SocketException[Connection refused: no further information to address /192.168.233.1:5701]</div><div class="line">八月 28, 2020 10:05:15 下午 com.hazelcast.nio.tcp.TcpIpConnector</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Connecting to /192.168.233.1:5701, timeout: 10000, bind-any: true</div><div class="line">八月 28, 2020 10:05:17 下午 com.hazelcast.nio.tcp.TcpIpConnector</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Could not connect to: /192.168.233.1:5701. Reason: SocketException[Connection refused: no further information to address /192.168.233.1:5701]</div><div class="line">八月 28, 2020 10:05:17 下午 com.hazelcast.nio.tcp.TcpIpConnectionErrorHandler</div><div class="line">警告: [192.168.233.1]:5702 [dev] [3.12.2] Removing connection to endpoint [192.168.233.1]:5701 Cause =&gt; java.net.SocketException &#123;Connection refused: no further information to address /192.168.233.1:5701&#125;, Error-Count: 5</div><div class="line">八月 28, 2020 10:05:17 下午 com.hazelcast.internal.cluster.impl.MembershipManager</div><div class="line">警告: [192.168.233.1]:5702 [dev] [3.12.2] Member [192.168.233.1]:5701 - d594a601-9adc-493a-afad-57c3377a4d70 is suspected to be dead for reason: No connection</div><div class="line">八月 28, 2020 10:05:17 下午 com.hazelcast.internal.cluster.impl.MembershipManager</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Starting mastership claim process...</div><div class="line">八月 28, 2020 10:05:17 下午 com.hazelcast.internal.cluster.impl.MembershipManager</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Local MembersView&#123;version=2, members=[MemberInfo&#123;address=[192.168.233.1]:5701, uuid=d594a601-9adc-493a-afad-57c3377a4d70, liteMember=false, memberListJoinVersion=1&#125;, MemberInfo&#123;address=[192.168.233.1]:5702, uuid=b6af6227-f4d5-4730-a64d-f6fc11583760, liteMember=false, memberListJoinVersion=2&#125;]&#125; with suspected members: [[192.168.233.1]:5701] and initial addresses to ask: []</div><div class="line">八月 28, 2020 10:05:17 下午 com.hazelcast.internal.cluster.ClusterService</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] </div><div class="line"></div><div class="line">Members &#123;size:1, ver:3&#125; [</div><div class="line">	Member [192.168.233.1]:5702 - b6af6227-f4d5-4730-a64d-f6fc11583760 this</div><div class="line">]</div><div class="line"></div><div class="line">八月 28, 2020 10:05:17 下午 com.hazelcast.internal.cluster.impl.MembershipManager</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Mastership is claimed with: MembersView&#123;version=3, members=[MemberInfo&#123;address=[192.168.233.1]:5702, uuid=b6af6227-f4d5-4730-a64d-f6fc11583760, liteMember=false, memberListJoinVersion=2&#125;]&#125;</div><div class="line">八月 28, 2020 10:05:17 下午 com.hazelcast.internal.partition.InternalPartitionService</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Fetching most recent partition table! my version: 678</div><div class="line">八月 28, 2020 10:05:17 下午 com.hazelcast.internal.partition.InternalPartitionService</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Most recent partition table version: 678</div><div class="line">八月 28, 2020 10:05:17 下午 com.hazelcast.transaction.TransactionManagerService</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Committing/rolling-back live transactions of [192.168.233.1]:5701, UUID: d594a601-9adc-493a-afad-57c3377a4d70</div><div class="line">八月 28, 2020 10:05:17 下午 com.hazelcast.internal.partition.impl.MigrationManager</div><div class="line">信息: [192.168.233.1]:5702 [dev] [3.12.2] Partition balance is ok, no need to re-partition cluster data... </div><div class="line">八月 28, 2020 10:05:17 下午 io.vertx.core.impl.HAManager</div><div class="line">信息: nodeb6af6227-f4d5-4730-a64d-f6fc11583760 says: Node d594a601-9adc-493a-afad-57c3377a4d70 has failed. This node will deploy 1 deploymentIDs from that node.</div><div class="line">22:05:17.377 [vert.x-eventloop-thread-3] INFO ktor.application - No ktor.deployment.watch patterns specified, automatic reload is not active</div><div class="line">22:05:17.378 [vert.x-eventloop-thread-3] INFO ktor.application - Responding at http://0.0.0.0:8020</div><div class="line">八月 28, 2020 10:05:17 下午 io.vertx.core.impl.HAManager</div><div class="line">信息: Successfully redeployed verticle CLU1 after failover</div></pre></td></tr></table></figure>
+<p>从上面的输出信息可以看到集群成员只剩下b6af6227，然后自动把CLU1的监听8020端口的web服务器迁移到幸存的集群成员中并重新部署。当然如果集群所有成员死亡，那就无法再实现高可用了。</p>
+<h1 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h1><p>上面所介绍的只是经过短暂三天内的学习研究，我的Vertx-core的使用心得，vertx实际上还包含一堆可用的扩展功能，我个人用vertx的主要原因是它是JVM上少数实现了类似Erlang的并发模型的工具包，而且比起Akka，它的文档更容易读懂。配合Kotlin的when表达式的Erlang味更浓。建议新入门的可以多看看vertx官方的github仓库的examples，展示了大多数使用方法可供参考。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        <div id="donation_div"></div>
+
+<script src="/js/vdonate.js"></script>
+<script>
+var a = new Donate({
+  title: '如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作!', // 可选参数，打赏标题
+  btnText: '打赏支持', // 可选参数，打赏按钮文字
+  el: document.getElementById('donation_div'),
+  wechatImage: 'https://github.com/Hochikong/ckho-photolib/raw/master/donate/donateWechat.jpg',
+  alipayImage: 'https://github.com/Hochikong/ckho-photolib/blob/master/donate/donateWechat.jpg'
+});
+</script>
+      
+      
+        
+	<div id="comment">
+		<!-- 来必力City版安装代码 -->
+		<div id="lv-container" data-id="city" data-uid="MTAyMC8zMTQzNy84MDAx">
+		<script type="text/javascript">
+		   (function(d, s) {
+		       var j, e = d.getElementsByTagName(s)[0];
+
+		       if (typeof LivereTower === 'function') { return; }
+
+		       j = d.createElement(s);
+		       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+		       j.async = true;
+
+		       e.parentNode.insertBefore(j, e);
+		   })(document, 'script');
+		</script>
+		<noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+		</div>
+		<!-- City版安装代码已完成 -->
+	</div>
+
+
+
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/vert-x/">vert.x</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2020/08/18/kotlinPluginPractice/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">Kotlin插件化应用实践</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Vert-x简单介绍"><span class="nav-number">1.</span> <span class="nav-text">Vert.x简单介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#理解Vert-x的参考材料"><span class="nav-number">2.</span> <span class="nav-text">理解Vert.x的参考材料</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#了解Java-Swing"><span class="nav-number">2.1.</span> <span class="nav-text">了解Java Swing</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#了解Erlang"><span class="nav-number">2.2.</span> <span class="nav-text">了解Erlang</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Vert-x分析"><span class="nav-number">3.</span> <span class="nav-text">Vert.x分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Verticle"><span class="nav-number">3.1.</span> <span class="nav-text">Verticle</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Event-Bus"><span class="nav-number">3.2.</span> <span class="nav-text">Event Bus</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Future"><span class="nav-number">3.3.</span> <span class="nav-text">Future</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#高可用"><span class="nav-number">3.4.</span> <span class="nav-text">高可用</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#结语"><span class="nav-number">4.</span> <span class="nav-text">结语</span></a></li></ol>
+    
+    </div>
+  </aside>
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2017 - 2020 HOCHIKONG&#39;s WAPORIZer All Rights Reserved.</p>
+	      
+	      
+    		<p class="busuanzi_uv">
+				访客数 : <span id="busuanzi_value_site_uv"></span> |  
+				访问量 : <span id="busuanzi_value_site_pv"></span>
+		    </p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+    <a href="/" class="mobile-nav-link">Service</a>
+  
+    <a href="/" class="mobile-nav-link">Works</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+  <script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+	<div style="display: none;">
+    <script src="https://s95.cnzz.com/z_stat.php?id=1260716016&web_id=1260716016" language="JavaScript"></script>
+  </div>
+
+
+
+	<script async src="////busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js">
+	</script>
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            HOCHIKONG&#39;s WAPORIZer
+          </div>
+          <div class="panel-body">
+            Copyright © 2020 Hochikong All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>

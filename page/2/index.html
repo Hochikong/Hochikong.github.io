@@ -296,6 +296,123 @@
         
           <section id="main" style="float:none;">
   
+    <article id="post-pyqt5essential"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2019/03/03/pyqt5essential/">浅谈开发PyQt5应用的实践</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2019/03/03/pyqt5essential/" class="article-date">
+	  <time datetime="2019-03-02T17:40:34.000Z" itemprop="datePublished">2019-03-03</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/随笔/">随笔</a>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>其实在此之前我早就有接触过PyQt4，但是无奈接触的教程实在不够完整，也没有一条线索能循序渐进地学习，因此才放弃了PyQt，转而使用Electron开发GUI应用（学习Electron的路径实在太好了，有个很详细的例子可以参考）。直至到2019年2月某一天偶然发现packt的一门PyQt5视频教程限免，我就领取了并尝试看，然后就再次正式学习PyQt5。<a href="https://www.packtpub.com/application-development/python-gui-programming-recipes-using-pyqt5-video" target="_blank" rel="external">课程地址</a></p>
+<h2 id="开发PyQt应用的核心"><a href="#开发PyQt应用的核心" class="headerlink" title="开发PyQt应用的核心"></a>开发PyQt应用的核心</h2><p>在接下来的内容里，我将会谈及几个在开发PyQt应用时重点关注的几个要点，部分内容引用自前面所述课程和我的<a href="https://github.com/Hochikong/Qtlearn" target="_blank" rel="external">github repo</a>，一个很简陋的记事本。我所使用的Python版本是Python 3.6.6</p>
+<h3 id="核心流程"><a href="#核心流程" class="headerlink" title="核心流程"></a>核心流程</h3><p>开发一个复杂的PyQt应用必然不应该完全手写GUI部分的代码，无论是调整还是其他的改动都不太方便（如果真的纯手写我直接用Tkinter不就行了吗）。因此用Qt Designer进行UI设计是最好的，Qt Designer需要手动安装：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">pip install pyqt5-tools</div></pre></td></tr></table></figure>
+<p>安装完毕后在你的python安装目录里找到这个路径：~\Python36\Lib\site-packages\pyqt5_tools，并运行designer.exe即可打开。但关于如何使用Qt Designer不是本文的要点。</p>
+<ol>
+<li>在启动Qt Designer后就可以进行UI设计，设计完毕保存为.ui文件，实际上这个是xml结构的文件，可以通过pyuic进行转换，转换为python代码。</li>
+<li>把UI转换为python代码后就可以另开一个文件，请参考我前面提到的记事本demo中的main.py，这个是我编写的程序的入口，经过pyuic自动生成的python文件作为程序的UI渲染器，而我所写的逻辑代码则放在main.py中，实现解耦。如果我们把逻辑混在自动生成的代码里，那么一旦需要在UI的设计上做微调，经过pyuic再次转换的话就会丢失前面所写的内容，因此解耦是很重要的一环。</li>
+<li>完成逻辑编写、测试，就可以使用auto-py-to-exe进行Windows平台可执行文件的打包。</li>
+</ol>
+<h3 id="关键知识点"><a href="#关键知识点" class="headerlink" title="关键知识点"></a>关键知识点</h3><h4 id="Signal-amp-Slot"><a href="#Signal-amp-Slot" class="headerlink" title="Signal &amp; Slot"></a>Signal &amp; Slot</h4><p>这个可谓Qt的核心，如果有接触过jQuery，你就会发现这玩意其实和jQuery的事件处理机制差不多。这里贴一段jQuery的代码：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span> <span class="attr">src</span>=<span class="string">"/jquery/jquery.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span>&gt;</span><span class="undefined"></span></div><div class="line"><span class="javascript">        <span class="function"><span class="keyword">function</span> <span class="title">onclicked</span>(<span class="params"></span>) </span>&#123;</span></div><div class="line"><span class="javascript">            $(<span class="string">"p"</span>).slideToggle();</span></div><div class="line"><span class="undefined">        &#125;</span></div><div class="line"><span class="undefined"></span></div><div class="line"><span class="javascript">        $(<span class="built_in">document</span>).ready(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></div><div class="line"><span class="javascript">            $(<span class="string">"button"</span>).click(onclicked);</span></div><div class="line"><span class="undefined">        &#125;);</span></div><div class="line"><span class="undefined">    </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">p</span>&gt;</span>这是一个段落。<span class="tag">&lt;/<span class="name">p</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">button</span>&gt;</span>切换<span class="tag">&lt;/<span class="name">button</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>我再贴一段PyQt自动生成的代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">self.actionExit.triggered.connect(MainWindow.close)</div></pre></td></tr></table></figure>
+<p>可以看到两个代码具有相同的模式：选定对象，检测信号，根据提供的函数名调用函数。</p>
+<p>在Qt里，actionExit是sender，被按下的时候就会emit一个triggered signal，使用connect到槽，PyQt这里的槽可以是python函数或者QObject的成员方法。同时你也应该注意到，两个代码都是提供了函数名作为click和connect的参数，若connect的参数是MainWindow.close()，那不用说都会报错。但笔者并不打算在此详细介绍signal &amp; slot，请有需要深入了解的读者自行查阅相关资料。</p>
+<h4 id="QThread"><a href="#QThread" class="headerlink" title="QThread"></a>QThread</h4><p>如果程序需要执行长时间的任务并且任务与Widgets有交互的话，最好是使用QThread来实现，举个例子，执行一个爬虫并且需要在界面上展示爬取结果的话，就需要使用QThread创建新的线程，然后使用该线程执行相关代码，而如果不用多线程的话，就会阻塞GUI线程直到任务完成，期间用户无法操作GUI，而且Windows可能会提示程序无响应。</p>
+<p>所以我们应该继承自QThread然后创建一个类，然后实现run方法，run方法的内容就是我们程序里的耗时任务。</p>
+<p>这里引用一个网上的非常straight-forward的<a href="https://kushaldas.in/posts/pyqt5-thread-example.html" target="_blank" rel="external">例子</a>，情看下面的代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/python3</span></div><div class="line"></div><div class="line"><span class="keyword">import</span> sys</div><div class="line"><span class="keyword">import</span> tempfile</div><div class="line"><span class="keyword">import</span> subprocess</div><div class="line"><span class="keyword">from</span> PyQt5 <span class="keyword">import</span> QtWidgets</div><div class="line"><span class="keyword">from</span> PyQt5.QtCore <span class="keyword">import</span> QThread, pyqtSignal</div><div class="line"></div><div class="line"><span class="keyword">from</span> mainwindow <span class="keyword">import</span> Ui_MainWindow</div><div class="line"></div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">CloneThread</span><span class="params">(QThread)</span>:</span></div><div class="line">    signal = pyqtSignal(<span class="string">'PyQt_PyObject'</span>)</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></div><div class="line">        QThread.__init__(self)</div><div class="line">        self.git_url = <span class="string">""</span></div><div class="line"></div><div class="line">    <span class="comment"># run method gets called when we start the thread</span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">run</span><span class="params">(self)</span>:</span></div><div class="line">        tmpdir = tempfile.mkdtemp()</div><div class="line">        cmd = <span class="string">"git clone &#123;0&#125; &#123;1&#125;"</span>.format(self.git_url, tmpdir)</div><div class="line">        subprocess.check_output(cmd.split())</div><div class="line">        <span class="comment"># git clone done, now inform the main thread with the output</span></div><div class="line">        self.signal.emit(tmpdir)</div><div class="line"></div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExampleApp</span><span class="params">(QtWidgets.QMainWindow, Ui_MainWindow)</span>:</span></div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, parent=None)</span>:</span></div><div class="line">        super(ExampleApp, self).__init__(parent)</div><div class="line">        self.setupUi(self)</div><div class="line">        self.pushButton.setText(<span class="string">"Git clone with Thread"</span>)</div><div class="line">        <span class="comment"># Here we are telling to call git_clone method when</span></div><div class="line">        <span class="comment"># someone clicks on the pushButton.</span></div><div class="line">        self.pushButton.clicked.connect(self.git_clone)</div><div class="line">        self.git_thread = CloneThread()  <span class="comment"># This is the thread object</span></div><div class="line">        <span class="comment"># Connect the signal from the thread to the finished method</span></div><div class="line">        self.git_thread.signal.connect(self.finished)</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">git_clone</span><span class="params">(self)</span>:</span></div><div class="line">        self.git_thread.git_url = self.lineEdit.text()  <span class="comment"># Get the git URL</span></div><div class="line">        self.pushButton.setEnabled(<span class="keyword">False</span>)  <span class="comment"># Disables the pushButton</span></div><div class="line">        self.textEdit.setText(<span class="string">"Started git clone operation."</span>)  <span class="comment"># Updates the UI</span></div><div class="line">        self.git_thread.start()  <span class="comment"># Finally starts the thread</span></div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">finished</span><span class="params">(self, result)</span>:</span></div><div class="line">        self.textEdit.setText(<span class="string">"Cloned at &#123;0&#125;"</span>.format(result))  <span class="comment"># Show the output to the user</span></div><div class="line">        self.pushButton.setEnabled(<span class="keyword">True</span>)  <span class="comment"># Enable the pushButton</span></div><div class="line"></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">main</span><span class="params">()</span>:</span></div><div class="line">    app = QtWidgets.QApplication(sys.argv)</div><div class="line">    form = ExampleApp()</div><div class="line">    form.show()</div><div class="line">    app.exec_()</div><div class="line"></div><div class="line"></div><div class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</div><div class="line">    main()</div></pre></td></tr></table></figure>
+<p>这个代码的耗时任务是git clone，因此作者继承自QThread并实现了run方法，这里引用Qt官方文档对run()的描述：</p>
+<blockquote>
+<p>void QThread::run()</p>
+<p>The starting point for the thread. After calling <a href="https://doc.qt.io/qt-5/qthread.html#start" target="_blank" rel="external">start</a>(), the newly created thread calls this function. The default implementation simply calls <a href="https://doc.qt.io/qt-5/qthread.html#exec" target="_blank" rel="external">exec</a>().</p>
+<p>You can reimplement this function to facilitate advanced thread management. Returning from this method will end the execution of the thread.</p>
+<p><strong>See also</strong> <a href="https://doc.qt.io/qt-5/qthread.html#start" target="_blank" rel="external">start</a>() and <a href="https://doc.qt.io/qt-5/qthread.html#wait" target="_blank" rel="external">wait</a>().</p>
+</blockquote>
+<p>同时run的结尾有个emit，当任务执行完毕后将会发送一个信号，并把结果发送出去。</p>
+<p>然后看ExampleApp的代码，实例化CloneThread后，把self.git_clone()和clicked事件连接起来，当按钮被clicked之后，就会通过新的线程执行git clone（调用CloneThread实例的start()方法），然后任务完毕把CloneThread实例发出的信号connect到self.finished()上，并作为run()所emit的内容作为finished()的参数执行收尾工作。</p>
+<p>最后我们总结一下使用QThread的流程：</p>
+<p>1.继承自QThread创建一个类，实现run方法，根据情况选择emit。</p>
+<p>2.在GUI上监听事件，实例化步骤一的类，调用start()方法。</p>
+<p>3.根据情况选择connect。</p>
+<h4 id="GUI代码与逻辑代码的解耦"><a href="#GUI代码与逻辑代码的解耦" class="headerlink" title="GUI代码与逻辑代码的解耦"></a>GUI代码与逻辑代码的解耦</h4><p>在“核心流程”一节已经简单介绍过解耦的重要性，这里简单谈谈如何实践和需要关注的问题。首要的步骤是通过Qt Designer设计出你想要的UI，并可以借助style sheet来美化UI，然后把设计导出为.ui文件。设计是非常重要的工作，因此为了减少以后因为UI更改导致已经写好的逻辑代码出问题，我非常建议在用Designer开发UI前就做好设计，禁止在写逻辑代码的阶段再对UI做大幅度修改。</p>
+<p>这里补充个坑：而在开发UI阶段要注意objectName字段，比如Designer里创建的默认窗体的菜单栏，如果你删掉了之前写的menuFile子项，你再创建同名子项的话，objectName字段里得到是自动加了后缀（删掉xxx，再创建就会出现xxx_2）的名字，为了减少不必要的麻烦，应该重做UI。</p>
+<p>而.ui文件的备份也很重要，本人试过误操作得到了个惨重教训：对.ui文件执行了PyCharm里配置的autopep8工具，导致格式变化无法再被读取和修改，因此UI设计制作完毕，导出后应该做备份。只要UI文件在，就可以对UI进行修改调整，但是一旦丢失就很麻烦了。</p>
+<p>备份好.ui文件后，就可以使用pyuic工具把它们转换为python文件，这里贴我的PyCharm设置：</p>
+<p><img src="https://github.com/Hochikong/ckho-photolib/raw/master/20190302/01.png" alt="设置"></p>
+<p>实际上命令是这样的：pyuic5 xxx.ui -x -o xxx.py</p>
+<p>-x选项会自动为生成的python代码添加执行入口，即</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</div></pre></td></tr></table></figure>
+<p>-o指定输出的文件名，不过要注意不要把External Tools用在错误的文件上搞到格式混乱无法挽回就好了。</p>
+<p>用pyuic5转换为py代码之后就可以开一个新文件（比如main.py）来写逻辑，以我的代码为例(dialog.py)：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># -*- coding: utf-8 -*-</span></div><div class="line"></div><div class="line"><span class="comment"># Form implementation generated from reading ui file 'dialog.ui'</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment"># Created by: PyQt5 UI code generator 5.11.3</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment"># WARNING! All changes made in this file will be lost!</span></div><div class="line"></div><div class="line"><span class="keyword">from</span> PyQt5 <span class="keyword">import</span> QtCore, QtGui, QtWidgets</div><div class="line"></div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">Ui_Dialog</span><span class="params">(object)</span>:</span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">setupUi</span><span class="params">(self, Dialog)</span>:</span></div><div class="line">        Dialog.setObjectName(<span class="string">"Dialog"</span>)</div><div class="line">        ...</div></pre></td></tr></table></figure>
+<p>每个pyuic5转换后的代码都有注释警告不要在此文件中写别的内容，同时每个窗体都有一个以Ui_开头的类，我们只要在main.py里导入此类即可使用：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> sys</div><div class="line"></div><div class="line"><span class="keyword">from</span> PyQt5 <span class="keyword">import</span> QtWidgets</div><div class="line"></div><div class="line"><span class="comment"># when you run you should delete the . before textb</span></div><div class="line"><span class="keyword">from</span> textb <span class="keyword">import</span> Ui_MainWindow</div><div class="line"><span class="keyword">from</span> dialog <span class="keyword">import</span> Ui_Dialog</div><div class="line"></div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyApp</span>:</span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></div><div class="line">        self.app = QtWidgets.QApplication(sys.argv)</div><div class="line"></div><div class="line">        self.main_window = QtWidgets.QMainWindow()</div><div class="line">        self.ui = Ui_MainWindow()</div><div class="line">        self.ui.setupUi(self.main_window)</div><div class="line"></div><div class="line">        self.dialog = QtWidgets.QDialog()</div><div class="line">        self.dialog_ui = Ui_Dialog()</div><div class="line">        self.dialog_ui.setupUi(self.dialog)</div><div class="line"></div><div class="line">        self.ui.textEdit.textChanged.connect(self.auto_save)</div><div class="line">        self.ui.actionOpen.triggered.connect(self.on_open_click)</div><div class="line">        self.ui.actionSave.triggered.connect(self.on_save_click)</div><div class="line">        self.ui.actionNew.triggered.connect(self.on_new_click)</div><div class="line"></div><div class="line">        self.main_window.show()</div><div class="line">        sys.exit(self.app.exec_())</div></pre></td></tr></table></figure>
+<p>这里就导入了Ui_MainWindow和Ui_Dialog并且进行实例化，但是要注意的是，就算mian.py里有多个Ui实例，像</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">self.app = QtWidgets.QApplication(sys.argv)</div></pre></td></tr></table></figure>
+<p>的代码也只需要写一行，上面的例子里，Dialog被执行setupUi之后并不会直接显示出来，而我们需要这个展示这个dialog的时候就需要执行show()和exec_()：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">dialog_alert</span><span class="params">(self, content)</span>:</span></div><div class="line">    self.dialog_ui.label.setText(content)</div><div class="line">    self.dialog_ui.pushButton.clicked.connect(self.dialog.close)</div><div class="line"></div><div class="line">    self.dialog.show()</div><div class="line">    self.dialog.exec_()</div></pre></td></tr></table></figure>
+<p>这里我们总结一下解耦的原理：</p>
+<p>1.设计转换UI为python代码。</p>
+<p>2.在主程序入口里import UI转换后的类，实例化并添加逻辑代码，按需显示。</p>
+<h4 id="打包exe"><a href="#打包exe" class="headerlink" title="打包exe"></a>打包exe</h4><p>虽然这个并不是重点，在Linux环境下直接安装依赖就可以跑起来，但对于我这种常年用Windows的人来说，打包exe肯定比直接在cmder里python xxx.py便捷。这里我觉得auto-py-to-exe这个工具比较好用。</p>
+<p>用pip安装后就可以在console里启动这玩意：</p>
+<p><img src="https://github.com/Hochikong/ckho-photolib/raw/master/20190302/02.png" alt="转换工具"></p>
+<p>有趣的是，这玩意的GUI是用一个叫做Eel的库实现的，一个Python+Electron混合程序开发库，有兴趣的读者可以去了解下。</p>
+<p>首先是Script Location，以我的代码为例，这里我们选择main.py，即记事本demo的程序入口。</p>
+<p>Onefile选项的One Directory是表示打包为一个目录，目录的mian.exe是程序入口；第二个是打包为单个exe文件。就个人感觉，如果你的程序引用了以目录存放的资源（比如图标），或会在相对路径下的进行文件输出，最好是用One Directory，比如我的程序会引用源码包里icon\的文件，如果打包为单个exe，在exe的路径里若没有icon\目录，就无法显示图标。为了组织文件，你肯定需要一个目录把这些东西和其他文件隔离，所以为何不直接打包one directory？还可以做自安装包。</p>
+<p>Console Window的第一个选项是程序运行时会带一个cmd黑框，后者则没有，为了美观，一般都是选择后者。</p>
+<p><img src="https://github.com/Hochikong/ckho-photolib/raw/master/20190302/03.png" alt="Icon"></p>
+<p>Icon展开后可以添加ico文件，这个主要是为了打包出来的exe文件的图标，而窗体的icon与此无关，窗体icon需要在Qt Designer里设置。</p>
+<p>Addition Files是添加其他依赖资源，比如前面提到的icon\目录，可以用add folder添加，那么在打包出来的包里就会包含icon\目录，记事本demo的窗体icon也能正常显示。</p>
+<p>Advance的内容我还没怎么试过，有兴趣的读者可以自行了解。</p>
+<p>配置好之后直接按convert .py to .exe即可自动打包，途中应该会报类似的警告：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">WARNING: lib not found: api-ms-win-crt-heap-l1-1-0.dll dependency of C:\Program Files (x86)\Python\python.exe</div></pre></td></tr></table></figure>
+<p>我的平台是Win10 1803，实际上打包出来的exe无论在Win7还是Win10上都可以运行，因此直接无视就好了。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>这个是我最终做出来的demo：</p>
+<p><img src="https://github.com/Hochikong/ckho-photolib/raw/master/20190302/04.png" alt="记事本"></p>
+<p>说实话，PyQt有Qt非常详细的文档可供参考，只要掌握开发PyQt应用的核心知识，开发GUI应用的难度一点都不比Electron高，甚至更加轻松。我也有意用PyQt重写一个之前用Electron+Vue实现的GUI应用。我还是非常推荐packt那门视频课程的，讲得非常有条理，例子也很好懂，当然Qt的官方文档（重点！是Qt的文档，而非PyQt的文档）也是非常有用，可以去<a href="https://doc.qt.io/qt-5/reference-overview.html" target="_blank" rel="external">这里</a>看。希望读者看了这篇文章能有所帮助吧。</p>
+<p>Qt牛逼！</p>
+<p>####################################################################</p>
+<p>再推荐一个YouTube大佬的PyQt5系列视频<a href="https://www.youtube.com/channel/UCD6ArU-AYbfIj5sx2L4SZAQ" target="_blank" rel="external">教程</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PyQt5/">PyQt5</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+  
     <article id="post-electronapptalk"  class="article article-type-post" itemscope itemprop="blogPost" >
   <div id="articleInner" class="article-inner">
     
@@ -1002,87 +1119,6 @@ AttributeError                            Traceback (most recent call last)
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/正则表达式/">正则表达式</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-<!-- Table of Contents -->
-
-  
-    <article id="post-depolymyblog"  class="article article-type-post" itemscope itemprop="blogPost" >
-  <div id="articleInner" class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 class="thumb" itemprop="name">
-      <a class="article-title" href="/2017/10/21/depolymyblog/">博客部署记录</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-meta">
-      
-	<a href="/2017/10/21/depolymyblog/" class="article-date">
-	  <time datetime="2017-10-20T18:09:40.000Z" itemprop="datePublished">2017-10-21</time>
-	</a>
-
-      
-    <a class="article-category-link" href="/categories/日常折腾/">日常折腾</a>
-
-      
-    </div>
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>从学习到部署花了我一天时间，主要是看朋友的博客<a href="http://www.vinsongeek.com" target="_blank" rel="external">vinson</a>完成大部分的安装配置的。这篇文章主要讲讲部署途中遇到的各种坑和要点。  </p>
-<h3 id="坑-参考"><a href="#坑-参考" class="headerlink" title="坑/参考"></a>坑/参考</h3><p>1.如果装了福昕阅读器，你想预览文章必须为hexo s指定端口：</p>
-<pre><code>hexo s -p PORT
-</code></pre><p>2.默认的4000端口无法使用，所以你需要指定一个其他端口用于预览。<a href="http://blog.csdn.net/u012246342/article/details/51543370" target="_blank" rel="external">参考</a>      </p>
-<p>3.常用配置的设置：  <a href="http://www.cnblogs.com/syd192/p/6074323.html" target="_blank" rel="external">参考1</a>；<a href="https://github.com/yscoder/hexo-theme-indigo/wiki/%E9%85%8D%E7%BD%AE" target="_blank" rel="external">参考2</a>    </p>
-<p>4.我在修改<a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank" rel="external">hiker</a>主题的_config.yml文件的时候，以为sidebar的widgets是选择任意一个结果把下面带“-”的都注释掉，然后选一个填到“widgets:”后面（下面为错误示范）：</p>
-<p>错误：</p>
-<pre><code># Sidebar
-sidebar: left
-widgets: social 
-#- social
-#- category
-#- tag
-#- tagcloud
-#- archive
-#- recent_posts
-</code></pre><p>实际上应该是：</p>
-<pre><code>sidebar: left
-widgets: 
-- social
-- category
-- tag
-- tagcloud
-- archive
-- recent_posts
-</code></pre><p>因为这个坑差点放弃了这个主题（现在坑依然很多）  </p>
-<h3 id="关键点"><a href="#关键点" class="headerlink" title="关键点"></a>关键点</h3><ul>
-<li>创建的github repo一定要是“用户名.github.io”  </li>
-<li>配置的时候，在执行hexo init的目录和你下载主题的目录里都有一个_config.yml文件，配置的时候需要注意你修改的文件是否正确  </li>
-</ul>
-<h3 id="常用hexo命令"><a href="#常用hexo命令" class="headerlink" title="常用hexo命令:"></a>常用hexo命令:</h3><h4 id="清理目录，常用于更新博客"><a href="#清理目录，常用于更新博客" class="headerlink" title="清理目录，常用于更新博客:"></a>清理目录，常用于更新博客:</h4><pre><code>hexo clean  
-</code></pre><h4 id="生成内容"><a href="#生成内容" class="headerlink" title="生成内容:"></a>生成内容:</h4><pre><code>hexo g  
-</code></pre><h4 id="进行预览"><a href="#进行预览" class="headerlink" title="进行预览:"></a>进行预览:</h4><pre><code>hexo s
-</code></pre><h4 id="部署"><a href="#部署" class="headerlink" title="部署:"></a>部署:</h4><pre><code>hexo d 
-</code></pre><h4 id="生成博客页面（主页、归档等）"><a href="#生成博客页面（主页、归档等）" class="headerlink" title="生成博客页面（主页、归档等）:"></a>生成博客页面（主页、归档等）:</h4><pre><code>hexo new page &quot;xxx&quot;
-</code></pre><h4 id="生成博客文章（默认文章标题是你输入的文件名，可以修改）"><a href="#生成博客文章（默认文章标题是你输入的文件名，可以修改）" class="headerlink" title="生成博客文章（默认文章标题是你输入的文件名，可以修改）:"></a>生成博客文章（默认文章标题是你输入的文件名，可以修改）:</h4><pre><code>hexo new &quot;xxx&quot;
-</code></pre><h2 id="还有一点吐槽"><a href="#还有一点吐槽" class="headerlink" title="还有一点吐槽"></a>还有一点吐槽</h2><p>这个hexo主题的markdown引擎真的迷，用```来标注代码文章居然会乱，我宁愿直接按tab写代码</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/hexo/">hexo</a></li></ul>
 
     </footer>
   </div>
